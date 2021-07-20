@@ -11,7 +11,7 @@ Multiple buy orders bot for OpenSea.
 - `opensea_key` - OpenSea API key. Optional, recommended for multiple requests.
 - `delay` - delay between buy orders in milliseconds. Default: `1000`.
 - `expiration` - expiration time for offer in hours. Default: `24`.
-- `exit_timeout` - timeout in milliseconds for checking if all tasks done. Default: `1000`.
+- `exit_timeout` - timeout in milliseconds for checking if all tasks done. Default: `2000`.
 
 Default config file: `config.json`.
 
