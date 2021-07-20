@@ -16,7 +16,7 @@ Multiple buy orders bot for OpenSea.
 Default config file: `config.json`.
 
 **Example**
-```
+```json
 {
   "network": "rinkeby",
   "infura_key": "<your Infura API key>",
@@ -58,7 +58,7 @@ You should have an Infura or Alchemy API key, an OpenSea API key, an OpenSea acc
 - Run `offers.js`.
 
 **Example**
-```
+```shell
 npm install
 node offers.js --config=config.json --file=list.txt
 ```
