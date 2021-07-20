@@ -47,6 +47,7 @@ https://testnets.opensea.io/assets/0x08a62684d8d609dcc7cfb0664cf9aabec86504e5/11
 - `--config=<file name>` - config file. Default: `config.json`.
 - `--output=<file name>` - output log file. Default: `log.txt`.
 - `--verbose` - print all messages to console. Disabled by default.
+- `--seaverb` - print OpenSea log messages. Disabled by default.
 - `--printinfo` - don't create buy orders, but print assets info. Disabled by default.
 
 ## Usage
