@@ -1,0 +1,12 @@
+{
+  "name": "sea-offers-bot-js",
+  "version": "0.0.1",
+  "description": "Multiple buy orders bot for OpenSea.",
+  "main": "offers.js",
+  "author":  "Mitya Selivanov (https://guattari.ru/contact)",
+  "license": "MIT",
+  "dependencies": {
+    "@truffle/hdwallet-provider": "^1.4.1",
+    "opensea-js": "^1.1.5"
+  }
+}
