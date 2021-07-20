@@ -6,6 +6,9 @@
 *.njsproj
 *.njsproj.user
 *.sln
+
 package-lock.json
 
-example.txt
+config.txt
+list.txt
+log.txt

@@ -2,37 +2,42 @@
 
 Multiple buy orders bot for OpenSea.
 
-## Environment variables
+## Config
 
-- `MNEMONIC` - MetaMask mnemonic phrase.
-- `INFURA_KEY` or `ALCHEMY_KEY` - Infura or Alchemy API key.
-- `WALLET_ADDRESS` - buyer wallet address.
-- `OPENSEA_KEY` - OpenSea API key. Optional, required for multiple requests.
-- `NETWORK` - network name (use `mainnet` or `rinkeby`).
+`network` - network name (use `mainnet` or `rinkeby`).
+`infura_key` or `alchemy_key` - Infura or Alchemy node API key.
+`mnemonic` - MetaMask mnemonic phrase.
+`wallet_address` - buyer wallet address.
+`opensea_key` - OpenSea API key. Optional, recommended for multiple requests.
+`delay` - delay between buy orders in milliseconds.
+`expiration` - expiration time for offer in hours.
 
-**Example** (for Linux)
+Default config file: `config.json`.
+
+**Example**
 ```
-export INFURA_KEY=<your Infura API key>
-export MNEMONIC="<your MetaMask mnemonic phrase>"
-export WALLET_ADDRESS=<your wallet address>
-export OPENSEA_KEY=<your OpenSea API key>
-export NETWORK=rinkeby
+{
+  "network": "rinkeby",
+  "infura_key": "<your Infura API key>",
+  "mnemonic": "<your MetaMask mnemonic phrase>",
+  "wallet_address": "<your wallet address>",
+
+  "delay": 500,
+  "expiration": 4
+}
 ```
-
-## Command line arguments
-
-- `--price=<price value>` - set the base price for an offer.
-- `--file=<path to file>` - set the path to the assets list file.
 
 ## Assets list file
 
-Each line containts a link to the asset on the OpenSea and an optional price coefficient as a floating-point number.
+Each line containts a link to the asset on the OpenSea and a price as a floating-point number.
 
-**List file example**
+Default list file: `list.txt`.
+
+**Example**
 ```
-https://testnets.opensea.io/assets/0x08a62684d8d609dcc7cfb0664cf9aabec86504e5/6086
-https://testnets.opensea.io/assets/0x08a62684d8d609dcc7cfb0664cf9aabec86504e5/4367 1.5
-https://testnets.opensea.io/assets/0x08a62684d8d609dcc7cfb0664cf9aabec86504e5/11 2
+https://testnets.opensea.io/assets/0x08a62684d8d609dcc7cfb0664cf9aabec86504e5/6086 0.01
+https://testnets.opensea.io/assets/0x08a62684d8d609dcc7cfb0664cf9aabec86504e5/4367 0.01
+https://testnets.opensea.io/assets/0x08a62684d8d609dcc7cfb0664cf9aabec86504e5/11 0.02
 ```
 
 ## Usage
@@ -40,11 +45,11 @@ https://testnets.opensea.io/assets/0x08a62684d8d609dcc7cfb0664cf9aabec86504e5/11
 You should have an Infura or Alchemy API key, an OpenSea API key, an OpenSea account and a MetaMask account.
 
 - Install the package.
-- Setup environment variables.
+- Create a config file.
 - Run `offers.js`.
 
 **Example**
 ```
 npm install
-node offers.js --price=0.01 --file=list.txt
+node offers.js --config=config.json --file=list.txt
 ```

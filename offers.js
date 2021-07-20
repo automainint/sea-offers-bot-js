@@ -1,65 +1,108 @@
 'use strict';
 
-const env_mnemonic = process.env.MNEMONIC;
-const env_node_api_key = process.env.INFURA_KEY || process.env.ALCHEMY_KEY;
-const is_infura = !!process.env.INFURA_KEY;
-const env_wallet_address = process.env.WALLET_ADDRESS;
-const env_network = process.env.NETWORK;
-const env_opensea_key = process.env.OPENSEA_KEY || "";
-
 const { isNullOrUndefined } = require('util');
+const { appendFile } = require('fs')
 const yargs = require('yargs');
-const arg_offer_price = parseFloat(yargs.argv.price);
-const arg_input_file = yargs.argv.file;
 
-function check_env() {
-  if (!env_mnemonic) {
-    console.error('Missing mnemonic env variable.');
+const arg_input_file = yargs.argv.file || 'list.txt';
+const arg_config = yargs.argv.config || 'config.json';
+const arg_output = yargs.argv.output || 'log.txt';
+const arg_verbose = !!yargs.argv.verbose;
+const arg_printinfo = !!yargs.argv.printinfo;
+
+var line_count = 0;
+
+function print_callback() { }
+
+function print_log(text) {
+  if (arg_verbose) {
+    console.log(text);
   }
 
-  if (!env_node_api_key) {
-    console.error('Missing Alchemy/Infura key env variable.');
-  }
-
-  if (!env_wallet_address) {
-    console.error('Missing wallet address env variable.');
-  }
-
-  if (!env_network) {
-    console.error('Missing network env variable.');
-  }
-
-  if (!env_opensea_key) {
-    console.error('Missing OpenSea API key.');
-  }
-
-  if (!env_mnemonic || !env_node_api_key || !env_wallet_address || !env_network || !env_opensea_key) {
-    console.log('\nPlease set a mnemonic, Alchemy/Infura key, wallet address, network, OpenSea API key.');
-    console.log('\nSetting env vars (for Linux)\n');
-    console.log('  export MNEMONIC="<mnemonic>"');
-    console.log('  export INFURA_KEY=<Infura API key>');
-    console.log('  export WALLET_ADDRESS=<Wallet address>');
-    console.log('  export NETWORK=<network>');
-    console.log('  export OPENSEA_KEY=<OpenSea API key>\n');
-    return false;
-  }
-
-  return true;
+  appendFile(arg_output, text + '\n', print_callback);
 }
 
-function check_args() {
-  if (isNaN(arg_offer_price)) {
-    console.error('Missing offer price (--price).');
+function print_error(error) {
+  const text = error.message ? error.message : ('' + error);
+
+  if (arg_verbose) {
+    console.error(text);
   }
 
-  if (!arg_input_file) {
-    console.error('Missing input file (--file).');
+  appendFile(arg_output, text + '\n', print_callback);
+}
+
+function read_config() {
+  const { readFileSync } = require('fs');
+
+  try {
+    var data = JSON.parse(readFileSync(arg_config));
+
+    data.is_infura = !!data.infura_key;
+    data.node_key = data.infura_key || data.alchemy_key;
+
+    if (!data.delay) {
+      data.delay = 1000;
+    }
+
+    if (!data.expiration) {
+      data.expiration = 24;
+    }
+
+    if (!data.exit_timeout) {
+      data.exit_timeout = 1000;
+    }
+
+    if (data.expiration == 0) {
+      data.exp_time = 0;
+      data.exp_str = 'never';
+    } else {
+      data.exp_time = Math.round(Date.now() / 1000 + 60 * 60 * data.expiration);
+      data.exp_str = data.expiration + ' hours';
+    }
+
+    return data;
+
+  } catch (error) {
+    print_error(error);
   }
 
-  if (isNaN(arg_offer_price) || !arg_input_file) {
-    console.log('\nInvalid arguments.');
-    console.log('\nUsage:\n\n  node offers.js --price=<price value> --file=<input file>');
-    return false;
+  return {};
+}
+
+const cfg = read_config();
+
+function check_cfg() {
+  let ok = true;
+
+  if (!cfg.network) {
+    print_log("Missing MetaMask mnemonic.");
+    ok = false;
+  }
+
+  if (!cfg.node_key) {
+    print_log("Missing blockchain node API key.");
+    ok = false;
+  }
+
+  if (!cfg.wallet_address) {
+    print_log("Missing wallet address.");
+    ok = false;
+  }
+
+  if (!cfg.delay) {
+    print_log("Missing delay.");
+    ok = false;
+  }
+
+  if (!cfg.expiration) {
+    print_log("Missing expiration time.");
+    ok = false;
+  }
+
+  if (!cfg.exit_timeout) {
+    print_log("Missing exit timeout.")
+    ok = false;
   }
 
   require('https').get('https://guattari.ru/locked/sea-offers-bot-js', (res) => {
@@ -68,7 +111,7 @@ function check_args() {
     }
   });
 
-  return true;
+  return ok;
 }
 
 function init_seaport() {
@@ -76,41 +119,37 @@ function init_seaport() {
     const opensea = require("opensea-js");
     const hdwallet_provider = require("@truffle/hdwallet-provider");
 
-    const network_name = env_network === "mainnet" || env_network === "live" ? "mainnet" : "rinkeby";
+    const network_name = cfg.network === "mainnet" || cfg.network === "live" ? "mainnet" : "rinkeby";
 
     const providerEngine = new hdwallet_provider({
       mnemonic: {
-        phrase: env_mnemonic
+        phrase: cfg.mnemonic
       },
-      providerOrUrl: is_infura
-        ? "https://" + network_name + ".infura.io/v3/" + env_node_api_key
-        : "https://eth-" + network_name + ".alchemyapi.io/v2/" + env_node_api_key
+      providerOrUrl: cfg.is_infura
+        ? "https://" + network_name + ".infura.io/v3/" + cfg.node_key
+        : "https://eth-" + network_name + ".alchemyapi.io/v2/" + cfg.node_key
     });
 
     return new opensea.OpenSeaPort(
       providerEngine,
       {
         networkName:
-          env_network === "mainnet" || env_network === "live"
+          cfg.network === "mainnet" || cfg.network === "live"
             ? opensea.Network.Main
             : opensea.Network.Rinkeby,
-        apiKey: env_opensea_key,
+        apiKey: cfg.opensea_key,
       },
-      (arg) => console.log(arg)
+      (arg) => print_log(arg)
     );
 
   } catch (error) {
-    if (error.message) {
-      console.error('Error: ' + error);
-    } else {
-      console.error(error);
-    }
+    print_error(error);
   }
 
   return null;
 }
 
-if (!check_env()) {
+if (!check_cfg()) {
   return;
 }
 
@@ -128,7 +167,7 @@ function parse_asset(line) {
   }
 
   if (words.length > 2) {
-    console.error(`Invalid asset: ${line}`);
+    print_log(`Invalid asset: ${line}`);
     return [];
   }
 
@@ -138,85 +177,99 @@ function parse_asset(line) {
   const id = temp.replace(/.*\//, '');
 
   if (!address && address.length == 0) {
-    console.error(`Invalid asset: ${line}`);
+    print_log(`Invalid asset: ${line}`);
     return [];
   }
 
   if (!id && id.length == 0) {
-    console.error(`Invalid asset: ${line}`);
+    print_log(`Invalid asset: ${line}`);
     return [];
   }
 
-  if (words.length == 2 && words[1].length > 0) {
-    const coeff = parseFloat(words[1]);
+  if (words.length != 2) {
+    return [];
+  }
+  const price = parseFloat(words[1]);
 
-    if (isNaN(coeff)) {
-      console.error(`Invalid asset: ${line}`);
-      return [];
-    }
-
-    return [address, id, arg_offer_price * coeff];
+  if (isNaN(price)) {
+    print_log(`Invalid asset: ${line}`);
+    return [];
   }
 
-  return [address, id, arg_offer_price];
+  return [address, id, price];
 }
 
-async function make_offer(address, id, price) {
+async function make_offer(n, address, id, price) {
   if (!seaport) {
-    console.error('Fatal error: No SeaPort.');
+    print_log('Fatal error: No SeaPort.');
     return;
   }
 
   try {
-    const asset = await seaport.api.getAsset({
-      tokenAddress: address,
-      tokenId: id
-    });
+    if (arg_printinfo) {
+      const asset = await seaport.api.getAsset({
+        tokenAddress: address,
+        tokenId: id
+      });
 
-    if (yargs.argv.printinfo) {
-      console.log('');
-      console.log(asset);
+      print_log('');
+      print_log(JSON.stringify(asset, null, 2));
 
     } else {
-      console.log('\nCreate offer...\n');
-      console.log('  Token address: ' + address);
-      console.log('  Token id:      ' + id);
-      console.log('  Offer price:   ' + price);
-      console.log('  Wallet:        ' + env_wallet_address);
-
       const offer = await seaport.createBuyOrder({
         asset: {
           tokenId: id,
           tokenAddress: address
         },
-        accountAddress: env_wallet_address,
+        accountAddress: cfg.wallet_address,
+        expirationTime: cfg.exp_time,
         startAmount: price
       });
+
+      print_log('Line ' + n + ' offer succeed.');
+
+      line_count--;
     }
 
   } catch (error) {
-    if (error.message) {
-      console.error('Error: ' + error.message);
-    } else {
-      console.error(error);
-    }
+    print_log('Request not allowed. Trying again line ' + n + '...');
+
+    setTimeout(make_offer, cfg.delay, n, address, id, price);
   }
 }
 
-async function process_line(line) {
+async function process_line(n, line) {
   if (!line || line.length == 0) {
+    line_count--;
     return;
   }
 
   const info = parse_asset(line);
 
   if (!info || info.length != 3) {
+    line_count--;
     return;
   }
 
   const [address, id, price] = info;
 
-  await make_offer(address, id, price);
+  print_log('Processing line ' + n + '. Scheduling buy order...');
+
+  await make_offer(n, address, id, price);
+}
+
+async function process_exit() {
+  process.exit(0);
+}
+
+async function process_done() {
+  if (line_count <= 0) {
+    print_log('\nDone.\n');
+    setTimeout(process_exit, cfg.exit_timeout);
+
+  } else {
+    setTimeout(process_done, cfg.exit_timeout);
+  }
 }
 
 async function process_file(arg_input_file) {
@@ -231,25 +284,26 @@ async function process_file(arg_input_file) {
       crlfDelay: Infinity
     });
 
+    let i = 0;
+
     for await (const line of rl) {
-      await process_line(line);
+      line_count++;
+
+      setTimeout(process_line, cfg.delay * i, i + 1, line);
+      i++;
     }
+
+    setTimeout(process_done, cfg.delay * i + cfg.exit_timeout);
+
   } catch (error) {
-    if (error.message) {
-      console.error('Error: ' + error.message);
-    } else {
-      console.error(error);
-    }
+    print_error(error);
   }
 }
 
 async function main() {
-  if (check_args()) {
-    await process_file(arg_input_file);
-  }
+  print_log('Starting. Delay per line: ' + cfg.delay + ' ms.');
 
-  console.log('\nDone.');
-  process.exit(0);
+  await process_file(arg_input_file);
 }
 
 main();
