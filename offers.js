@@ -9,6 +9,7 @@ const arg_config = yargs.argv.config || 'config.json';
 const arg_output = yargs.argv.output || 'log.txt';
 const arg_verbose = !!yargs.argv.verbose;
 const arg_printinfo = !!yargs.argv.printinfo;
+const arg_seaverb = !!yargs.argv.seaverb;
 
 var line_count = 0;
 
@@ -23,7 +24,9 @@ function print_log(text) {
 }
 
 function print_sea_log(text) {
-  print_log(`   OpenSea:  ${text}`);
+  if (arg_seaverb) {
+    print_log(`   OpenSea:  ${text}`);
+  }
 }
 
 function print_error(error) {
