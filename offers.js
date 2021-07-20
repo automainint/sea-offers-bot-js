@@ -307,6 +307,8 @@ async function process_file(arg_input_file) {
 
   } catch (error) {
     print_error(error);
+
+    setTimeout(process_done, cfg.exit_timeout);
   }
 }
 
