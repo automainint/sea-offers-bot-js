@@ -76,6 +76,11 @@ function check_cfg() {
   let ok = true;
 
   if (!cfg.network) {
+    print_log("Missing network name.");
+    ok = false;
+  }
+
+  if (!cfg.mnemonic) {
     print_log("Missing MetaMask mnemonic.");
     ok = false;
   }
