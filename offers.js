@@ -19,17 +19,21 @@ function print_log(text) {
     console.log(text);
   }
 
-  appendFile(arg_output, text + '\n', print_callback);
+  appendFile(arg_output, `${text}\n`, print_callback);
+}
+
+function print_sea_log(text) {
+  print_log(`  OpenSea:  ${text}`);
 }
 
 function print_error(error) {
-  const text = error.message ? error.message : ('' + error);
+  const text = error.message ? `Error:  ${error.message}` : `${error}`;
 
   if (arg_verbose) {
     console.error(text);
   }
 
-  appendFile(arg_output, text + '\n', print_callback);
+  appendFile(arg_output, `${text}\n`, print_callback);
 }
 
 function read_config() {
@@ -50,7 +54,7 @@ function read_config() {
     }
 
     if (!data.exit_timeout) {
-      data.exit_timeout = 1000;
+      data.exit_timeout = 2000;
     }
 
     if (data.expiration == 0) {
@@ -58,7 +62,7 @@ function read_config() {
       data.exp_str = 'never';
     } else {
       data.exp_time = Math.round(Date.now() / 1000 + 60 * 60 * data.expiration);
-      data.exp_str = data.expiration + ' hours';
+      data.exp_str = `${data.expiration} hours`;
     }
 
     return data;
@@ -76,37 +80,37 @@ function check_cfg() {
   let ok = true;
 
   if (!cfg.network) {
-    print_log("Missing network name.");
+    print_log('Missing network name.');
     ok = false;
   }
 
   if (!cfg.mnemonic) {
-    print_log("Missing MetaMask mnemonic.");
+    print_log('Missing MetaMask mnemonic.');
     ok = false;
   }
 
   if (!cfg.node_key) {
-    print_log("Missing blockchain node API key.");
+    print_log('Missing blockchain node API key.');
     ok = false;
   }
 
   if (!cfg.wallet_address) {
-    print_log("Missing wallet address.");
+    print_log('Missing wallet address.');
     ok = false;
   }
 
   if (!cfg.delay) {
-    print_log("Missing delay.");
+    print_log('Missing delay.');
     ok = false;
   }
 
   if (!cfg.expiration) {
-    print_log("Missing expiration time.");
+    print_log('Missing expiration time.');
     ok = false;
   }
 
   if (!cfg.exit_timeout) {
-    print_log("Missing exit timeout.")
+    print_log('Missing exit timeout.')
     ok = false;
   }
 
@@ -121,30 +125,30 @@ function check_cfg() {
 
 function init_seaport() {
   try {
-    const opensea = require("opensea-js");
-    const hdwallet_provider = require("@truffle/hdwallet-provider");
+    const opensea = require('opensea-js');
+    const hdwallet_provider = require('@truffle/hdwallet-provider');
 
-    const network_name = cfg.network === "mainnet" || cfg.network === "live" ? "mainnet" : "rinkeby";
+    const network_name = cfg.network === 'mainnet' || cfg.network === 'live' ? 'mainnet' : 'rinkeby';
 
     const providerEngine = new hdwallet_provider({
       mnemonic: {
         phrase: cfg.mnemonic
       },
       providerOrUrl: cfg.is_infura
-        ? "https://" + network_name + ".infura.io/v3/" + cfg.node_key
-        : "https://eth-" + network_name + ".alchemyapi.io/v2/" + cfg.node_key
+        ? 'https://' + network_name + '.infura.io/v3/' + cfg.node_key
+        : 'https://eth-' + network_name + '.alchemyapi.io/v2/' + cfg.node_key
     });
 
     return new opensea.OpenSeaPort(
       providerEngine,
       {
         networkName:
-          cfg.network === "mainnet" || cfg.network === "live"
+          cfg.network === 'mainnet' || cfg.network === 'live'
             ? opensea.Network.Main
             : opensea.Network.Rinkeby,
         apiKey: cfg.opensea_key,
       },
-      (arg) => print_log(arg)
+      (arg) => print_sea_log(arg)
     );
 
   } catch (error) {
@@ -164,7 +168,7 @@ if (isNullOrUndefined(seaport)) {
   return;
 }
 
-function parse_asset(line) {
+function parse_asset(n, line) {
   const words = line.split(' ');
 
   if (!words || words.length == 0) {
@@ -172,7 +176,7 @@ function parse_asset(line) {
   }
 
   if (words.length > 2) {
-    print_log(`Invalid asset: ${line}`);
+    print_log(`  Invalid asset on line ${n}: ${line}`);
     return [];
   }
 
@@ -182,22 +186,23 @@ function parse_asset(line) {
   const id = temp.replace(/.*\//, '');
 
   if (!address && address.length == 0) {
-    print_log(`Invalid asset: ${line}`);
+    print_log(`  Invalid asset on line ${n}: ${line}`);
     return [];
   }
 
   if (!id && id.length == 0) {
-    print_log(`Invalid asset: ${line}`);
+    print_log(`  Invalid asset on line ${n}: ${line}`);
     return [];
   }
 
   if (words.length != 2) {
+    print_log(`  Invalid asset on line ${n}: ${line}`);
     return [];
   }
   const price = parseFloat(words[1]);
 
   if (isNaN(price)) {
-    print_log(`Invalid asset: ${line}`);
+    print_log(`  Invalid asset on line ${n}: ${line}`);
     return [];
   }
 
@@ -206,7 +211,7 @@ function parse_asset(line) {
 
 async function make_offer(n, address, id, price) {
   if (!seaport) {
-    print_log('Fatal error: No SeaPort.');
+    print_log('  Fatal error: No SeaPort.');
     return;
   }
 
@@ -231,13 +236,13 @@ async function make_offer(n, address, id, price) {
         startAmount: price
       });
 
-      print_log('Line ' + n + ' offer succeed.');
+      print_log(`* Line ${n} offer succeed.`);
 
       line_count--;
     }
 
   } catch (error) {
-    print_log('Request not allowed. Trying again line ' + n + '...');
+    print_log(`  Request not allowed. Trying again line ${n}...`);
 
     setTimeout(make_offer, cfg.delay, n, address, id, price);
   }
@@ -249,7 +254,7 @@ async function process_line(n, line) {
     return;
   }
 
-  const info = parse_asset(line);
+  const info = parse_asset(n, line);
 
   if (!info || info.length != 3) {
     line_count--;
@@ -258,7 +263,7 @@ async function process_line(n, line) {
 
   const [address, id, price] = info;
 
-  print_log('Processing line ' + n + '. Scheduling buy order...');
+  print_log(`  Processing line ${n}. Scheduling buy order...`);
 
   await make_offer(n, address, id, price);
 }
@@ -306,7 +311,7 @@ async function process_file(arg_input_file) {
 }
 
 async function main() {
-  print_log('Starting. Delay per line: ' + cfg.delay + ' ms.');
+  print_log(`Starting. Delay per line: ${cfg.delay} ms.\n`);
 
   await process_file(arg_input_file);
 }

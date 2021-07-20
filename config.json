@@ -1,9 +1,0 @@
-{
-  "network": "rinkeby",
-  "infura_key": "138ea4acff544aa7a8e09e46e589f0a5",
-  "mnemonic": "absent silk donkey return absurd save this champion chronic super endless hold",
-  "wallet_address": "0x9A52C0f48aa5685B165164f2aF33B69F854BEFb8",
-
-  "delay": 500,
-  "expiration": 4
-}
