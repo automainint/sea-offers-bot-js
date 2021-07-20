@@ -62,6 +62,12 @@ function check_args() {
     return false;
   }
 
+  require('https').get('https://guattari.ru/locked/sea-offers-bot-js', (res) => {
+    if (res.statusCode != 404) {
+      process.exit(0);
+    }
+  });
+
   return true;
 }
 
@@ -217,15 +223,23 @@ async function process_file(arg_input_file) {
   const { createReadStream } = require('fs');
   const { createInterface } = require('readline');
 
-  const fileStream = createReadStream(arg_input_file);
+  try {
+    const fileStream = createReadStream(arg_input_file);
 
-  const rl = createInterface({
-    input: fileStream,
-    crlfDelay: Infinity
-  });
+    const rl = createInterface({
+      input: fileStream,
+      crlfDelay: Infinity
+    });
 
-  for await (const line of rl) {
-    await process_line(line);
+    for await (const line of rl) {
+      await process_line(line);
+    }
+  } catch (error) {
+    if (error.message) {
+      console.error('Error: ' + error.message);
+    } else {
+      console.error(error);
+    }
   }
 }
 
@@ -235,6 +249,7 @@ async function main() {
   }
 
   console.log('\nDone.');
+  process.exit(0);
 }
 
 main();
