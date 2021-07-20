@@ -4,13 +4,13 @@ Multiple buy orders bot for OpenSea.
 
 ## Config
 
-`network` - network name (use `mainnet` or `rinkeby`).
-`infura_key` or `alchemy_key` - Infura or Alchemy node API key.
-`mnemonic` - MetaMask mnemonic phrase.
-`wallet_address` - buyer wallet address.
-`opensea_key` - OpenSea API key. Optional, recommended for multiple requests.
-`delay` - delay between buy orders in milliseconds.
-`expiration` - expiration time for offer in hours.
+- `network` - network name (use `mainnet` or `rinkeby`).
+- `infura_key` or `alchemy_key` - Infura or Alchemy node API key.
+- `mnemonic` - MetaMask mnemonic phrase.
+- `wallet_address` - buyer wallet address.
+- `opensea_key` - OpenSea API key. Optional, recommended for multiple requests.
+- `delay` - delay between buy orders in milliseconds.
+- `expiration` - expiration time for offer in hours.
 
 Default config file: `config.json`.
 
