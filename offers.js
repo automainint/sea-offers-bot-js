@@ -1,7 +1,7 @@
 'use strict';
 
 const { isNullOrUndefined } = require('util');
-const { appendFile } = require('fs')
+const { appendFileSync } = require('fs')
 const yargs = require('yargs');
 
 const arg_input_file = yargs.argv.file || 'list.txt';
@@ -13,14 +13,12 @@ const arg_seaverb = !!yargs.argv.seaverb;
 
 var line_count = 0;
 
-function print_callback() { }
-
 function print_log(text) {
   if (arg_verbose) {
     console.log(text);
   }
 
-  appendFile(arg_output, `${text}\n`, print_callback);
+  appendFileSync(arg_output, `${text}\n`);
 }
 
 function print_sea_log(text) {
@@ -36,7 +34,7 @@ function print_error(error) {
     console.error(text);
   }
 
-  appendFile(arg_output, `${text}\n`, print_callback);
+  appendFileSync(arg_output, `${text}\n`);
 }
 
 function read_config() {
