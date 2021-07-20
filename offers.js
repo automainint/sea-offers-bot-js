@@ -23,7 +23,7 @@ function print_log(text) {
 }
 
 function print_sea_log(text) {
-  print_log(`  OpenSea:  ${text}`);
+  print_log(`   OpenSea:  ${text}`);
 }
 
 function print_error(error) {
@@ -176,7 +176,7 @@ function parse_asset(n, line) {
   }
 
   if (words.length > 2) {
-    print_log(`  Invalid asset on line ${n}: ${line}`);
+    print_log(`   Invalid asset on line ${n}: ${line}`);
     return [];
   }
 
@@ -186,23 +186,23 @@ function parse_asset(n, line) {
   const id = temp.replace(/.*\//, '');
 
   if (!address && address.length == 0) {
-    print_log(`  Invalid asset on line ${n}: ${line}`);
+    print_log(`   Invalid asset on line ${n}: ${line}`);
     return [];
   }
 
   if (!id && id.length == 0) {
-    print_log(`  Invalid asset on line ${n}: ${line}`);
+    print_log(`   Invalid asset on line ${n}: ${line}`);
     return [];
   }
 
   if (words.length != 2) {
-    print_log(`  Invalid asset on line ${n}: ${line}`);
+    print_log(`   Invalid asset on line ${n}: ${line}`);
     return [];
   }
   const price = parseFloat(words[1]);
 
   if (isNaN(price)) {
-    print_log(`  Invalid asset on line ${n}: ${line}`);
+    print_log(`   Invalid asset on line ${n}: ${line}`);
     return [];
   }
 
@@ -236,15 +236,22 @@ async function make_offer(n, address, id, price) {
         startAmount: price
       });
 
-      print_log(`* Line ${n} offer succeed.`);
+      print_log(` * Line ${n} offer succeed.`);
 
       line_count--;
     }
 
   } catch (error) {
-    print_log(`  Request not allowed. Trying again line ${n}...`);
+    if (error.message && error.message.includes('API Error 429')) {
+      print_log(`   Request was throttled. Trying again line ${n}...`);
+      setTimeout(make_offer, cfg.delay, n, address, id, price);
 
-    setTimeout(make_offer, cfg.delay, n, address, id, price);
+    } else {
+      print_log(` ! Line ${n} failed. Internal error due processing.`);
+      print_error(error);
+
+      line_count--;
+    }
   }
 }
 
@@ -263,7 +270,7 @@ async function process_line(n, line) {
 
   const [address, id, price] = info;
 
-  print_log(`  Processing line ${n}. Scheduling buy order...`);
+  print_log(`   Processing line ${n}. Scheduling buy order...`);
 
   await make_offer(n, address, id, price);
 }
