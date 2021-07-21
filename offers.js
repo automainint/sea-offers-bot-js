@@ -246,9 +246,9 @@ async function make_offer(n, address, id, price) {
       });
 
       print_log(` * Line ${n} offer succeed.`);
-
-      line_count--;
     }
+
+    line_count--;
 
   } catch (error) {
     if (error.message && error.message.includes('API Error 429')) {
