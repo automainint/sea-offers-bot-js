@@ -75,6 +75,8 @@ function read_config() {
   return {};
 }
 
+print_log('Init config...');
+
 const cfg = read_config();
 
 function check_cfg() {
@@ -162,6 +164,8 @@ function init_seaport() {
 if (!check_cfg()) {
   return;
 }
+
+print_log('Init OpenSea SDK...');
 
 const seaport = init_seaport();
 

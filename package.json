@@ -1,6 +1,6 @@
 {
   "name": "sea-offers-bot-js",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Multiple buy orders bot for OpenSea.",
   "main": "offers.js",
   "author":  "Mitya Selivanov (https://guattari.ru/contact)",
