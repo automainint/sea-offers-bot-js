@@ -170,7 +170,11 @@ if (isNullOrUndefined(seaport)) {
 }
 
 function parse_asset(n, line) {
-  const words = line.split(' ');
+  const words = line
+    .replace(/\s\s*/g, ' ')
+    .replace(/^\s*/g, '')
+    .replace(/\s*$/g, '')
+    .split(' ');
 
   if (!words || words.length == 0) {
     return [];
@@ -200,7 +204,7 @@ function parse_asset(n, line) {
     print_log(`   Invalid asset on line ${n}: ${line}`);
     return [];
   }
-  const price = parseFloat(words[1]);
+  const price = parseFloat(words[1].replace(',', '.'));
 
   if (isNaN(price)) {
     print_log(`   Invalid asset on line ${n}: ${line}`);
