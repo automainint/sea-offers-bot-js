@@ -117,12 +117,6 @@ function check_cfg() {
     ok = false;
   }
 
-  require('https').get('https://guattari.ru/locked/sea-offers-bot-js', (res) => {
-    if (res.statusCode != 404) {
-      process.exit(0);
-    }
-  });
-
   return ok;
 }
 
