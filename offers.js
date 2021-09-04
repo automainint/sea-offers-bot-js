@@ -68,7 +68,7 @@ function read_config() {
       data.exp_str = `${data.expiration} hours`;
     }
 
-    if (data.monitoring_delay) {
+    if (!data.monitoring_delay) {
       data.monitoring_delay = 1000;
     }
 
