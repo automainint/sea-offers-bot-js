@@ -23,7 +23,9 @@ function print_log(text) {
 
 function print_sea_log(text) {
   if (arg_seaverb) {
-    print_log(`   OpenSea:  ${text}`);
+    print_log(
+      '\n   OpenSea:  ' +
+      `${text}`.replace('\n', '\n             '));
   }
 }
 
@@ -64,6 +66,10 @@ function read_config() {
     } else {
       data.exp_time = Math.round(Date.now() / 1000 + 60 * 60 * data.expiration);
       data.exp_str = `${data.expiration} hours`;
+    }
+
+    if (data.monitoring_delay) {
+      data.monitoring_delay = 1000;
     }
 
     return data;
@@ -136,15 +142,21 @@ function init_seaport() {
         : 'https://eth-' + network_name + '.alchemyapi.io/v2/' + cfg.node_key
     });
 
+    var api_config = {
+      networkName:
+        cfg.network === 'mainnet' || cfg.network === 'live'
+          ? opensea.Network.Main
+          : opensea.Network.Rinkeby,
+      apiKey: cfg.opensea_key
+    };
+
+    if (cfg.gas_price) {
+      api_config.gasPrice = cfg.gas_price;
+    }
+
     return new opensea.OpenSeaPort(
       providerEngine,
-      {
-        networkName:
-          cfg.network === 'mainnet' || cfg.network === 'live'
-            ? opensea.Network.Main
-            : opensea.Network.Rinkeby,
-        apiKey: cfg.opensea_key,
-      },
+      api_config,
       (arg) => print_sea_log(arg)
     );
 
@@ -229,6 +241,12 @@ async function make_offer(n, address, id, price) {
       print_log(JSON.stringify(asset, null, 2));
 
     } else {
+      print_log(
+        `\n   ${n} Processing...` +
+        `\n     Address: ${address}` +
+        `\n     Id:      ${id}` +
+        `\n     Price:   ${price}`);
+
       const offer = await seaport.createBuyOrder({
         asset: {
           tokenId: id,
@@ -239,18 +257,26 @@ async function make_offer(n, address, id, price) {
         startAmount: price
       });
 
-      print_log(` * Line ${n} offer succeed.`);
+      print_log(
+        `\n * ${n} Offer succeed.` +
+        `\n     Address: ${address}` +
+        `\n     Id:      ${id}` +
+        `\n     Price:   ${price}`);
     }
 
     line_count--;
 
   } catch (error) {
-    if (error.message && error.message.includes('API Error 429')) {
-      print_log(`   Request was throttled. Trying again line ${n}...`);
+    if (cfg.monitoring_enabled) {
+      print_log(`   ${n} Request failed. Trying again...`);
+      setTimeout(make_offer, cfg.monitoring_delay, n, address, id, price);
+
+    } else if (error.message && error.message.includes('API Error 429')) {
+      print_log(`   ${n} Request was throttled. Trying again...`);
       setTimeout(make_offer, cfg.delay, n, address, id, price);
 
     } else {
-      print_log(` ! Line ${n} failed. Internal error due processing.`);
+      print_log(` ! ${n} Request failed. Internal error due processing.`);
       print_error(error);
 
       line_count--;
@@ -273,7 +299,11 @@ async function process_line(n, line) {
 
   const [address, id, price] = info;
 
-  print_log(`   Processing line ${n}. Scheduling buy order...`);
+  print_log(
+    `\n   ${n} Scheduling...` +
+    `\n     Address: ${address}` +
+    `\n     Id:      ${id}` +
+    `\n     Price:   ${price}`);
 
   await make_offer(n, address, id, price);
 }

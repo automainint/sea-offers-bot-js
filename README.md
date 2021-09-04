@@ -12,6 +12,8 @@ Multiple buy orders bot for OpenSea.
 - `delay` - delay between buy orders in milliseconds. Default: `1000`.
 - `expiration` - expiration time for offer in hours. Default: `24`.
 - `exit_timeout` - timeout in milliseconds for checking if all tasks done. Default: `2000`.
+- `monitoring_enabled` - if true, bot will try to buy an asset until success. Default: `false`.
+- `monitoring_delay` - delay between buy order attempts in milliseconds. Default: `1000`.
 
 Default config file: `config.json`.
 
@@ -24,7 +26,10 @@ Default config file: `config.json`.
   "wallet_address": "<your wallet address>",
 
   "delay": 500,
-  "expiration": 4
+  "expiration": 4,
+
+  "monitoring_enabled": true,
+  "monitoring_delay": 5000
 }
 ```
 
