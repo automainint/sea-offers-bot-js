@@ -52,7 +52,7 @@ https://testnets.opensea.io/assets/0x08a62684d8d609dcc7cfb0664cf9aabec86504e5/11
 - `--printinfo` - don't create buy orders, but print assets info. Disabled by default.
 
 ## Usage
-You should have an Infura or Alchemy API key, an OpenSea API key, an OpenSea account and a MetaMask account.
+You should have an Infura or Alchemy API key, an OpenSea API key, an OpenSea account and a MetaMask account. Make sure to have installed Node.js and Git.
 - Install the package.
 - Create a config file.
 - Run `offers.js`.
