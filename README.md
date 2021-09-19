@@ -1,6 +1,8 @@
 # sea-offers-bot-js
 Multiple buy orders bot for OpenSea.
 
+I have improved version of the bot in private repo.
+
 ## Config
 - `network` - network name (use `mainnet` or `rinkeby`).
 - `infura_key` or `alchemy_key` - Infura or Alchemy node API key.
