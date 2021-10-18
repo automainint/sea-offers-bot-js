@@ -1,14 +1,11 @@
-/.vs/
 /node_modules/
-/bin/
-/obj/
-
-*.njsproj
-*.njsproj.user
-*.sln
 
 package-lock.json
 
 config.json
 list.txt
 log.txt
+proxy.txt
+.progress-*
+.stop
+*.zip
