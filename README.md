@@ -1,5 +1,5 @@
 # sea-offers-bot-js
-Multiple buy orders **bot** for **OpenSea** with the automatic price calculation and proxy support.
+Multiple buy orders **bot** for **OpenSea** with automatic price calculation and proxy support.
 
 [Contact me][contact-link] if you need access to unobfuscated source code, guidance, or you have a new feature proposal.
 
@@ -28,7 +28,7 @@ Be very precautious with automatic trading!
 - `expiration` - expiration time for offer in hours. Default: `24`.
 - `discard_threshold` - how much consecutive fails to discard an offer. Default: `10`.
 - `restart_threshold` - how much consecutive fails to restart. Default: `20`.
-- `price_auto` - enable the auto price calculation. Default: `true`.
+- `price_auto` - enable auto price calculation. Default: `true`.
   - Price will be calculated as `H` + `epsilon`, where `H` is the current highest offer price.
   - `price_floor` - minimum price in `wETH`. Default: `0.0001`.
   - `price_roof` - maximum price in `wETH`. Default: `1`.
@@ -61,9 +61,9 @@ Be very precautious with automatic trading!
   - `cache_time` - fetch cache timeout in milliseconds. Default: `5000`.
   - `fetch_timeout` - timeout for fetch requests in milliseconds. Default: `5000`.
 
-Values `floor`, `roof`, `epsilon` for the price calculation will be taken from the assets list file if specified, or from the config otherwise.
+Values `floor`, `roof`, `epsilon` for price calculation will be taken from the assets list file if specified, or from the config otherwise.
 
-If the auto price calculation is disabled, only the `floor` value will be used to create a buy order.
+If auto price calculation is disabled, only the `floor` value will be used to create a buy order.
 
 Default config file: `config.json`.
 
@@ -124,7 +124,7 @@ socks://127.0.0.1:9050
 - `--verbose` - print all messages to the console. Disabled by default.
 - `--seaverb` - print OpenSea log messages. Disabled by default.
 - `--printinfo` - don't create buy orders, but print the assets info. Disabled by default.
-- `--stop` - stop the currently running bot instance.
+- `--stop` - stop currently running bot instance.
 - `--resume=<line>` - resume progress from specified line.
 
 ## Usage
