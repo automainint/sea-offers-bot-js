@@ -16,7 +16,7 @@
   - `fail_threshold` to `switch_threshold`.
 - Add `--resume=<line>` command line argument.
 - Check for success with error.
-- Remove scheduling and concurrent code for better stability.
+- Remove scheduling and async code for better stability.
 
 ## 29.09.2021
 *Version 0.2.4*
