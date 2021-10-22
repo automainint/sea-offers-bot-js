@@ -1,3 +1,7 @@
+## 22.10.2021
+*Version 0.2.6*
+- Error handling fix.
+
 ## 18.10.2021
 *Version 0.2.5*
 - Remove config options:
