@@ -130,7 +130,7 @@ socks://127.0.0.1:9050
 ## Usage
 You should have an Infura or Alchemy API key, an OpenSea API key, an OpenSea account and a MetaMask account.
 
-Make sure to have installed **Node.js** with **Git**, **Python** and **C/C++** build tools (**npm** may require this to install dependencies).
+Make sure to have installed recent version of **Node.js** with **Git**, **Python** and **C/C++** build tools (**npm** may require this to install dependencies).
 - Install the package.
 - Create a config file.
 - Run `offers.js`.
@@ -140,6 +140,8 @@ Make sure to have installed **Node.js** with **Git**, **Python** and **C/C++** b
 npm install
 node offers.js --config=config.json --file=list.txt
 ```
+
+**Demo video** - https://youtu.be/sGwS2v-S2wk
 
 ## For tip
 - `btc` Bitcoin `bc1qau5y9wf49ammclhscuelwlm6370d9lqph6g9um`
