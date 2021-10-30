@@ -1,3 +1,7 @@
+## 30.10.2021
+*Version 0.2.7*
+- Add `skip_if_order_created` option in config.
+
 ## 22.10.2021
 *Version 0.2.6*
 - Error handling fix.

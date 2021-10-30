@@ -46,6 +46,7 @@ Be very precautious with automatic trading!
   - `skip_if_have_bid` - skip offer duplicates. Default: `true`.
   - `skip_if_too_high` - skip an offer if the roof price is lower then the current highest bid. Default: `true`.
   - `skip_if_owner_is_buyer` - skip an asset if you already own it. Default: `true`.
+  - `skip_if_order_created` - skip an asset if an error occured but order was created. Default: `true`.
 - Logging options:
   - `log_fetch` - log fetch calls. Default: `false`.
   - `log_full` - log full error messages. Default: `false`.
@@ -80,8 +81,12 @@ Default config file: `config.json`.
   "price_roof":     100,
   "price_epsilon":  0.001,
 
-  "delay":          500,
-  "expiration":     4
+  "expiration":     4,
+
+  "delay":                500,
+  "random_delay":         500,
+  "acquire_delay":        500,
+  "acquire_random_delay": 500
 }
 ```
 
