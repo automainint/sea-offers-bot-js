@@ -1,6 +1,8 @@
 # sea-offers-bot-js
 Multiple buy orders **bot** for **OpenSea** with automatic price calculation and proxy support.
 
+If something don't work, feel free to [create an issue][issues-link].
+
 [Contact me][contact-link] if you need access to unobfuscated source code, guidance, or you have a new feature proposal.
 
 ## Some tips to successfully run automatic operations on OpenSea
@@ -154,4 +156,5 @@ node offers.js --config=config.json --file=list.txt
 - `eth` Ethereum `0x98556fb56e3079696738579dBE70a5Fa761110b9`
 
 [tor-multiproxy-link]: https://github.com/automainint/tor-multiproxy
+[issues-link]:         https://github.com/automainint/sea-offers-bot-js/issues
 [contact-link]:        https://guattari.ru/contact
