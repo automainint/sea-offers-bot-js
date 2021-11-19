@@ -1,3 +1,8 @@
+## 19.11.2021
+*Version 0.2.8*
+- Add Troubleshooting in README.
+- Add option to install with Node v8.11.
+
 ## 30.10.2021
 *Version 0.2.7*
 - Add `skip_if_order_created` option in config.

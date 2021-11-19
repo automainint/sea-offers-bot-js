@@ -150,6 +150,24 @@ node offers.js --config=config.json --file=list.txt
 
 **Demo video** - https://youtu.be/sGwS2v-S2wk
 
+## Troubleshooting
+Sometimes you cannot install OpenSea SDK with recent Node version. Then you will need to downgrate to v8, replace package.json with package-node-8.11.json, install, and upgrade to v16. You will need to manually run `hotfix.js`.
+
+You can do it with the following commands:
+```shell
+# On Windows:
+move /Y package-node-8.11.json package.json
+
+# On Linux:
+# mv -f package-node-8.11.json package.json
+
+nvm use 8
+npm install
+nvm use 16
+node hotfix.js
+# Now you can run the Bot
+```
+
 ## For tip
 - `btc` Bitcoin `bc1qau5y9wf49ammclhscuelwlm6370d9lqph6g9um`
 - `btc` Bitcoin (Legacy) `369h9iMSq8ihjYMwdwhbn2ffXMrprHvxav`
