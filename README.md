@@ -151,20 +151,16 @@ node offers.js --config=config.json --file=list.txt
 **Demo video** - https://youtu.be/sGwS2v-S2wk
 
 ## Troubleshooting
-Sometimes you cannot install OpenSea SDK with recent Node version. Then you will need to downgrate to v8, replace package.json with package-node-8.11.json, install, and upgrade to v16. You will need to manually run `hotfix.js`.
+If you getting error `0308010C:digital envelope routines::unsupported`, you should use Node v16 or set environment variable `NODE_OPTIONS=--openssl-legacy-provider`.
+See also - https://github.com/webpack/webpack/issues/14532
 
-You can do it with the following commands:
+Sometimes you cannot install OpenSea SDK with recent Node version. Then you will need to downgrate to v8, install, and upgrade to v16.
+
+You can do it with the following commands if you have installed **NVM**:
 ```shell
-# On Windows:
-move /Y package-node-8.11.json package.json
-
-# On Linux:
-# mv -f package-node-8.11.json package.json
-
 nvm use 8
 npm install
 nvm use 16
-node hotfix.js
 # Now you can run the Bot
 ```
 

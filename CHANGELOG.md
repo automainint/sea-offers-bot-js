@@ -1,3 +1,7 @@
+## 4.12.2021
+*Version 0.2.9*
+- Use OpenSea SDK v1.2.2.
+
 ## 19.11.2021
 *Version 0.2.8*
 - Add Troubleshooting in README.
