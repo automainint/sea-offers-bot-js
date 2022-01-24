@@ -3,7 +3,9 @@ Multiple buy orders **bot** for **OpenSea** with automatic price calculation and
 
 If something don't work, feel free to [create an issue][issues-link].
 
-[Contact me][contact-link] if you need access to unobfuscated source code, guidance, or you have a new feature proposal. Join [our discord][discord-link].
+[Contact me][contact-link] if you need access to unobfuscated source code, guidance, or you have a new feature proposal.
+
+Join [our discord][discord-link]!
 
 ## Some tips to successfully run automatic operations on OpenSea
 - Have an OpenSea API key.
