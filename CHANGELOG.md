@@ -1,3 +1,11 @@
+## 24.01.2022
+*Version 0.2.10*
+- Node.js v8 compatibility.
+- Fix `resume` command line argument.
+- Simplify delay options.
+- Timeouts for SDK calls.
+- Add private keys option in config.
+
 ## 4.12.2021
 *Version 0.2.9*
 - Use OpenSea SDK v1.2.2.

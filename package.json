@@ -1,6 +1,6 @@
 {
   "name": "sea-offers-bot-js",
-  "version": "0.2.9",
+  "version": "0.2.10",
   "description": "Multiple buy orders bot for OpenSea.",
   "main": "offers.js",
   "scripts": {
@@ -14,7 +14,7 @@
     "async-mutex": "^0.3.2",
     "http-proxy-agent": "^4.0.1",
     "https-proxy-agent": "^5.0.0",
-    "node-fetch-cache": "^3.0.3",
+    "node-fetch-cache": "3.0.3",
     "opensea-js": "1.2.2",
     "socks-proxy-agent": "^6.0.0"
   }

@@ -22,13 +22,13 @@ Be very precautious with automatic trading!
 ### Required settings
 - `network` - network name (use `mainnet` or `rinkeby`).
 - `infura_key` or `alchemy_key` - Infura or Alchemy node API key.
-- `mnemonic` - MetaMask mnemonic phrase.
+- `mnemonic` or `private_keys` - MetaMask mnemonic phrase or array with private keys.
 - `wallet_address` - buyer wallet address.
 
 ### Optional settings
 - `opensea_key` - OpenSea API key. Optional, recommended for multiple requests.
 - `expiration` - expiration time for offer in hours. Default: `24`.
-- `discard_threshold` - how much consecutive fails to discard an offer. Default: `10`.
+- `discard_threshold` - how much consecutive fails to discard an asset. Default: `10`.
 - `restart_threshold` - how much consecutive fails to restart. Default: `20`.
 - `price_auto` - enable auto price calculation. Default: `true`.
   - Price will be calculated as `H` + `epsilon`, where `H` is the current highest offer price.
@@ -36,17 +36,17 @@ Be very precautious with automatic trading!
   - `price_roof` - maximum price in `wETH`. Default: `1`.
   - `price_epsilon` - price increment in `wETH`. Default: `0.0001`.
 - Delay options:
-  - `delay` - delay between buy orders in milliseconds. Default: `5000`.
-  - `random_delay` - additional delay roof in milliseconds. Default: `5000`.
-  - `acquire_delay` - delay after acquiring an asset in milliseconds. Default: `1000`.
-  - `acquire_random_delay` - additional acquiring delay roof in milliseconds. Default: `1000`.
+  - `delay` - delay between buy orders in milliseconds, not including processing time. Default: `5000`.
+  - `random_factor` - additional random delay factor. Default: `0.5`.
+  - `random_delay` - additional random delay roof in milliseconds. Default: `0`.
   - Actual delay between offers will be in range:
-    - from `delay` + `acquire_delay`;
-    - to `delay` + `acquire_delay` + `random_delay` + `acquire_random_delay`.
+    - from `delay`;
+    - to `delay * (1 + random_factor) + random_delay`.
   - `restart_delay` - delay for restart after a fatal error. Default: `5000`.
+  - `process_timeout` - timeout for SDK calls in milliseconds. Default: `10000`.
 - Skipping options:
   - `skip_if_have_bid` - skip offer duplicates. Default: `true`.
-  - `skip_if_too_high` - skip an offer if the roof price is lower then the current highest bid. Default: `true`.
+  - `skip_if_too_high` - skip an asset if the roof price is lower then the current highest bid. Default: `true`.
   - `skip_if_owner_is_buyer` - skip an asset if you already own it. Default: `true`.
   - `skip_if_order_created` - skip an asset if an error occured but order was created. Default: `true`.
 - Logging options:
@@ -68,6 +68,8 @@ Values `floor`, `roof`, `epsilon` for price calculation will be taken from the a
 
 If auto price calculation is disabled, only the `floor` value will be used to create a buy order.
 
+Fetch cache works only with **Node.js** v12 or higher.
+
 Default config file: `config.json`.
 
 **Example**
@@ -75,7 +77,7 @@ Default config file: `config.json`.
 {
   "network":        "rinkeby",
   "infura_key":     "<your Infura API key>",
-  "mnemonic":       "<your MetaMask mnemonic phrase>",
+  "private_keys":   [ "<your private key>" ],
   "wallet_address": "<your wallet address>",
 
   "price_auto":     true,
@@ -151,18 +153,12 @@ node offers.js --config=config.json --file=list.txt
 **Demo video** - https://youtu.be/sGwS2v-S2wk
 
 ## Troubleshooting
-If you getting error `0308010C:digital envelope routines::unsupported`, you should use Node v16 or set environment variable `NODE_OPTIONS=--openssl-legacy-provider`.
+If the bot don't work with recent **Node.js** version, try to use v8. You can use **NVM** to easily switch versions.
+
+If you getting error `0308010C:digital envelope routines::unsupported`, you should use **Node.js** v16 or set environment variable `NODE_OPTIONS=--openssl-legacy-provider`.
 See also - https://github.com/webpack/webpack/issues/14532
 
-Sometimes you cannot install OpenSea SDK with recent Node version. Then you will need to downgrate to v8, install, and upgrade to v16.
-
-You can do it with the following commands if you have installed **NVM**:
-```shell
-nvm use 8
-npm install
-nvm use 16
-# Now you can run the Bot
-```
+If you getting error `FetchError: request to ... failed, reason: certificate has expired`, and you are using an old **Node.js** version, set environment variable `NODE_TLS_REJECT_UNAUTHORIZED=0`.
 
 ## For tip
 - `btc` Bitcoin `bc1qau5y9wf49ammclhscuelwlm6370d9lqph6g9um`
