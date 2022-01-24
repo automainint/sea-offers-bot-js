@@ -89,10 +89,7 @@ Default config file: `config.json`.
 
   "expiration":     4,
 
-  "delay":                500,
-  "random_delay":         500,
-  "acquire_delay":        500,
-  "acquire_random_delay": 500
+  "delay":          500
 }
 ```
 
