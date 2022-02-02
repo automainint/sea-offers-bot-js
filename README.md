@@ -32,7 +32,6 @@ Have a separate account with small balance for testing unknown bots and services
 - `opensea_key` - OpenSea API key. Optional, recommended for multiple requests.
 - `expiration` - expiration time for offer in hours. Default: `24`.
 - `discard_threshold` - how much consecutive fails to discard an asset. Default: `10`.
-- `restart_threshold` - how much consecutive fails to restart. Default: `20`.
 - `price_auto` - enable auto price calculation. Default: `true`.
   - `price_floor` - minimum price in `wETH`. Default: `0.0001`.
   - `price_roof` - maximum price in `wETH`. Default: `1`.
@@ -45,7 +44,6 @@ Have a separate account with small balance for testing unknown bots and services
   - Actual delay between offers will be in range:
     - from `delay`;
     - to `delay * (1 + random_factor) + random_delay`.
-  - `restart_delay` - delay for restart after a fatal error. Default: `2000`.
   - `process_timeout` - timeout for SDK calls in milliseconds. Default: `10000`.
 - Skipping options:
   - `skip_if_have_bid` - skip offer duplicates. Default: `true`.
