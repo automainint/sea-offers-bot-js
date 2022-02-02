@@ -5,10 +5,10 @@ If something don't work, feel free to [create an issue][issues-link].
 
 [Contact me][contact-link] if you need access to unobfuscated source code, guidance, or you have a new feature proposal.
 
-Join [our discord][discord-link]!
+Join [our Discord][discord-link]!
 
 ## Some tips to successfully run automatic operations on OpenSea
-- Have an OpenSea API key.
+- Have an OpenSea [API key][api-key-link].
 - Use proxies. In case you don't have a good private proxy, Tor is currently better than any bad or public proxy.
 - Specify Cookies and User-Agent.
 - Specify random delays.
@@ -18,6 +18,7 @@ Join [our discord][discord-link]!
 You can use this bot alongside with [tor-multiproxy][tor-multiproxy-link].
 
 Be very precautious with automatic trading!
+Have a separate account with small balance for testing unknown bots and services.
 
 ## Configuration
 
@@ -33,10 +34,10 @@ Be very precautious with automatic trading!
 - `discard_threshold` - how much consecutive fails to discard an asset. Default: `10`.
 - `restart_threshold` - how much consecutive fails to restart. Default: `20`.
 - `price_auto` - enable auto price calculation. Default: `true`.
-  - Price will be calculated as `H` + `epsilon`, where `H` is the current highest offer price.
   - `price_floor` - minimum price in `wETH`. Default: `0.0001`.
   - `price_roof` - maximum price in `wETH`. Default: `1`.
   - `price_epsilon` - price increment in `wETH`. Default: `0.0001`.
+  - `price_increment_factor`- minimum price increment factor. Default: `0.1` (10%).
 - Delay options:
   - `delay` - delay between buy orders in milliseconds, not including processing time. Default: `5000`.
   - `random_factor` - additional random delay factor. Default: `0.5`.
@@ -44,7 +45,7 @@ Be very precautious with automatic trading!
   - Actual delay between offers will be in range:
     - from `delay`;
     - to `delay * (1 + random_factor) + random_delay`.
-  - `restart_delay` - delay for restart after a fatal error. Default: `5000`.
+  - `restart_delay` - delay for restart after a fatal error. Default: `2000`.
   - `process_timeout` - timeout for SDK calls in milliseconds. Default: `10000`.
 - Skipping options:
   - `skip_if_have_bid` - skip offer duplicates. Default: `true`.
@@ -59,7 +60,7 @@ Be very precautious with automatic trading!
   - `proxy_protocol` - proxy protocol. Should be `http://` or `socks://`. Default: `http://`.
   - `proxy_checking` - enable proxy checking. Default: `true`.
   - `switch_threshold` - how much fails to switch proxy. Default: `10`.
-  - `switch_delay` - proxy switching delay in milliseconds. Default: `5000`.
+  - `switch_delay` - proxy switching delay in milliseconds. Default: `2000`.
 - HTTP request options:
   - `cookie` - Cookie data. No Cookie by default.
   - `user_agent` - User-Agent data. No User-Agent by default.
@@ -70,7 +71,7 @@ Values `floor`, `roof`, `epsilon` for price calculation will be taken from the a
 
 If auto price calculation is disabled, only the `floor` value will be used to create a buy order.
 
-Fetch cache works only with **Node.js** v12 or higher.
+**Fetch cache** works only with Node.js **v12** or higher.
 
 Default config file: `config.json`.
 
@@ -94,7 +95,8 @@ Default config file: `config.json`.
 ```
 
 ## Assets list file
-Each line contains a link to the asset on OpenSea and floor, roof, epsilon price values in `wETH` as floating-point numbers. If there is no value specified, it will be taken from the config. First number is `floor`, second is `roof` and last is `epsilon`.
+Each line contains a link to the asset on OpenSea and floor, roof, epsilon price values in `wETH` as floating-point numbers.
+If there is no value specified, it will be taken from the config. First number is `floor`, second is `roof` and last is `epsilon`.
 
 Asset line notation: `<link to asset> [floor price] [roof price] [epsilon]`
 
@@ -116,7 +118,8 @@ Available protocols:
 - `http://` - for HTTP proxy.
 - `socks://` - for SOCKS 4/5 proxy.
 
-Host should be an IPv4 address. Protocol can be omitted, in which case the value `proxy_protocol` from the configuration will be used.
+Host should be an **IPv4** address.
+Protocol can be omitted, in which case the value `proxy_protocol` from the configuration will be used.
 
 **Example**
 ```
@@ -128,17 +131,27 @@ socks://127.0.0.1:9050
 - `--file=<file name>` - assets list file. Default: `list.txt`.
 - `--config=<file name>` - config file. Default: `config.json`.
 - `--output=<file name>` - output log file. Default: `log.txt`.
-- `--proxy=<file name>` - proxies list file. No proxy by default.
+- `--proxy=<file name>` - proxies list file. Taken from config by default.
+- `--wallet=<address>` - buyer wallet address. Taken from config by default.
 - `--verbose` - print all messages to the console. Disabled by default.
 - `--seaverb` - print OpenSea log messages. Disabled by default.
 - `--printinfo` - don't create buy orders, but print the assets info. Disabled by default.
 - `--stop` - stop currently running bot instance.
 - `--resume=<line>` - resume progress from specified line.
 
+## Auto price calculation formula
+For each asset:
+
+`bid price = max(floor, min(max(highest bid + epsilon, highest bid * (1 + increment factor)), roof)`
+- `highest bid` is the current highest bid price for the asset.
+- `floor`, `roof`, `epsilon` values taken from assets list file if specified, or from config otherwise.
+- `increment factor` value taken from config.
+
 ## Usage
 You should have an Infura or Alchemy API key, an OpenSea API key, an OpenSea account and a MetaMask account.
 
-Make sure to have installed recent version of **Node.js** with **Git**, **Python** and **C/C++** build tools (**npm** may require this to install dependencies).
+Make sure to have installed recent version of **Node.js**
+with **Git**, **Python** and **C/C++** build tools (**npm** may require this to install dependencies).
 - Install the package.
 - Create a config file.
 - Run `offers.js`.
@@ -152,19 +165,23 @@ node offers.js --config=config.json --file=list.txt
 **Demo video** - https://youtu.be/sGwS2v-S2wk
 
 ## Troubleshooting
-If the bot don't work with recent **Node.js** version, try to use v8. You can use **NVM** to easily switch versions.
+If the bot don't work with recent Node.js version, try to use **v8**.
+You can use **NVM** to easily switch versions.
 
-If you getting error `0308010C:digital envelope routines::unsupported`, you should use **Node.js** v16 or set environment variable `NODE_OPTIONS=--openssl-legacy-provider`.
+If you getting error `0308010C:digital envelope routines::unsupported`,
+you should use Node.js **v16** or set environment variable `NODE_OPTIONS=--openssl-legacy-provider`.
 See also - https://github.com/webpack/webpack/issues/14532
 
-If you getting error `FetchError: request to ... failed, reason: certificate has expired`, and you are using an old **Node.js** version, set environment variable `NODE_TLS_REJECT_UNAUTHORIZED=0`.
+If you getting error `FetchError: request to ... failed, reason: certificate has expired`,
+and you are using an old Node.js version, set environment variable `NODE_TLS_REJECT_UNAUTHORIZED=0`.
 
 ## For tip
 - `btc` Bitcoin `bc1qau5y9wf49ammclhscuelwlm6370d9lqph6g9um`
 - `btc` Bitcoin (Legacy) `369h9iMSq8ihjYMwdwhbn2ffXMrprHvxav`
 - `eth` Ethereum `0x98556fb56e3079696738579dBE70a5Fa761110b9`
 
-[tor-multiproxy-link]: https://github.com/automainint/tor-multiproxy
-[issues-link]:         https://github.com/automainint/sea-offers-bot-js/issues
-[contact-link]:        https://guattari.ru/contact
-[discord-link]:        https://guattari.ru/discord
+[api-key-link]:         https://docs.opensea.io/reference/request-an-api-key
+[tor-multiproxy-link]:  https://github.com/automainint/tor-multiproxy
+[issues-link]:          https://github.com/automainint/sea-offers-bot-js/issues
+[contact-link]:         https://guattari.ru/contact
+[discord-link]:         https://guattari.ru/discord

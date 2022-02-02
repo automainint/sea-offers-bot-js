@@ -79,6 +79,7 @@ var OpenSeaPort = /** @class */ (function () {
      */
     function OpenSeaPort(provider, apiConfig, logger) {
         if (apiConfig === void 0) { apiConfig = {}; }
+        var _a;
         // Extra gwei to add to the mean gas price when making transactions
         this.gasPriceAddition = new bignumber_js_1.BigNumber(3);
         // Multiply gas estimate by this factor when making transactions
@@ -88,18 +89,19 @@ var OpenSeaPort = /** @class */ (function () {
         apiConfig.gasPrice = apiConfig.gasPrice;
         this.api = new api_1.OpenSeaAPI(apiConfig);
         this._networkName = apiConfig.networkName;
-        var readonlyProvider = new Web3.providers.HttpProvider(this._networkName == types_1.Network.Main ? constants_1.MAINNET_PROVIDER_URL : constants_1.RINKEBY_PROVIDER_URL);
+        var readonlyProvider = new Web3.providers.HttpProvider(this.api.apiBaseUrl + "/" + constants_1.RPC_URL_PATH);
+        var useReadOnlyProvider = (_a = apiConfig.useReadOnlyProvider) !== null && _a !== void 0 ? _a : true;
         // Web3 Config
         this.web3 = new Web3(provider);
-        this.web3ReadOnly = new Web3(readonlyProvider);
+        this.web3ReadOnly = useReadOnlyProvider ? new Web3(readonlyProvider) : this.web3;
         // WyvernJS config
         this._wyvernProtocol = new wyvern_js_1.WyvernProtocol(provider, {
             network: this._networkName,
         });
         // WyvernJS config for readonly (optimization for infura calls)
-        this._wyvernProtocolReadOnly = new wyvern_js_1.WyvernProtocol(readonlyProvider, {
+        this._wyvernProtocolReadOnly = useReadOnlyProvider ? new wyvern_js_1.WyvernProtocol(readonlyProvider, {
             network: this._networkName,
-        });
+        }) : this._wyvernProtocol;
         // WrappedNFTLiquidationProxy Config
         this._wrappedNFTFactoryAddress = this._networkName == types_1.Network.Main ? constants_1.WRAPPED_NFT_FACTORY_ADDRESS_MAINNET : constants_1.WRAPPED_NFT_FACTORY_ADDRESS_RINKEBY;
         this._wrappedNFTLiquidationProxyAddress = this._networkName == types_1.Network.Main ? constants_1.WRAPPED_NFT_LIQUIDATION_PROXY_ADDRESS_MAINNET : constants_1.WRAPPED_NFT_LIQUIDATION_PROXY_ADDRESS_RINKEBY;
@@ -139,7 +141,7 @@ var OpenSeaPort = /** @class */ (function () {
         this._emitter.removeAllListeners(event);
     };
     /**
-     * Wraps an arbirary group of NFTs into their corresponding WrappedNFT ERC20 tokens.
+     * Wraps an arbitrary group of NFTs into their corresponding WrappedNFT ERC20 tokens.
      * Emits the `WrapAssets` event when the transaction is prompted.
      * @param param0 __namedParameters Object
      * @param assets An array of objects with the tokenId and tokenAddress of each of the assets to bundle together.
@@ -178,7 +180,7 @@ var OpenSeaPort = /** @class */ (function () {
         });
     };
     /**
-     * Unwraps an arbirary group of NFTs from their corresponding WrappedNFT ERC20 tokens back into ERC721 tokens.
+     * Unwraps an arbitrary group of NFTs from their corresponding WrappedNFT ERC20 tokens back into ERC721 tokens.
      * Emits the `UnwrapAssets` event when the transaction is prompted.
      * @param param0 __namedParameters Object
      * @param assets An array of objects with the tokenId and tokenAddress of each of the assets to bundle together.
@@ -221,7 +223,7 @@ var OpenSeaPort = /** @class */ (function () {
         });
     };
     /**
-     * Liquidates an arbirary group of NFTs by atomically wrapping them into their
+     * Liquidates an arbitrary group of NFTs by atomically wrapping them into their
      * corresponding WrappedNFT ERC20 tokens, and then immediately selling those
      * ERC20 tokens on their corresponding Uniswap exchange.
      * Emits the `LiquidateAssets` event when the transaction is prompted.
@@ -470,6 +472,7 @@ var OpenSeaPort = /** @class */ (function () {
                         // NOTE not in Wyvern exchange code:
                         // frontend checks to make sure
                         // token is approved and sufficiently available
+                        // HOTFIX
                         //return [4 /*yield*/, this._buyOrderValidationAndApprovals({ order: order, accountAddress: accountAddress })];
                         _c.label = 2;
                     case 2:
@@ -538,6 +541,7 @@ var OpenSeaPort = /** @class */ (function () {
                         // NOTE not in Wyvern exchange code:
                         // frontend checks to make sure
                         // token is approved and sufficiently available
+                        // HOTFIX
                         //return [4 /*yield*/, this._buyOrderValidationAndApprovals({ order: order, accountAddress: accountAddress })];
                         _d.label = 2;
                     case 2:
@@ -864,7 +868,7 @@ var OpenSeaPort = /** @class */ (function () {
                         });
                         _b = utils_1.assignOrdersToSides(order, matchingOrder), buy = _b.buy, sell = _b.sell;
                         metadata = this._getMetadata(order, referrerAddress);
-                        return [4 /*yield*/, this._atomicMatch({ buy: buy, sell: sell, accountAddress: accountAddress, metadata: metadata })];
+                        return [4 /*yield*/, this._atomicMatch({ buy: buy, sell: sell, accountAddress: accountAddress, metadata: metadata }, false, false)];
                     case 1:
                         transactionHash = _c.sent();
                         return [4 /*yield*/, this._confirmTransaction(transactionHash, types_1.EventType.MatchOrders, "Fulfilling order", function () { return __awaiter(_this, void 0, void 0, function () {
@@ -882,6 +886,56 @@ var OpenSeaPort = /** @class */ (function () {
                         _c.sent();
                         return [2 /*return*/, transactionHash];
                 }
+            });
+        });
+    };
+    /**
+     * Returns estimated amount of gas required for Fullfilling the order.
+     * @param param0 __namedParamaters Object
+     * @param order The order to fulfill, a.k.a. "take"
+     * @param accountAddress The taker's wallet address
+     * @param recipientAddress The optional address to receive the order's item(s) or curriencies. If not specified, defaults to accountAddress.
+     * @param referrerAddress The optional address that referred the order
+     * @returns gasEstimation
+     */
+    OpenSeaPort.prototype.getFulfillOrderGasEstimation = function (_a) {
+        var order = _a.order, accountAddress = _a.accountAddress, recipientAddress = _a.recipientAddress, referrerAddress = _a.referrerAddress;
+        return __awaiter(this, void 0, void 0, function () {
+            var matchingOrder, _b, buy, sell, metadata;
+            return __generator(this, function (_c) {
+                matchingOrder = this._makeMatchingOrder({
+                    order: order,
+                    accountAddress: accountAddress,
+                    recipientAddress: recipientAddress || accountAddress
+                });
+                _b = utils_1.assignOrdersToSides(order, matchingOrder), buy = _b.buy, sell = _b.sell;
+                metadata = this._getMetadata(order, referrerAddress);
+                return [2 /*return*/, this._atomicMatch({ buy: buy, sell: sell, accountAddress: accountAddress, metadata: metadata }, true, false)];
+            });
+        });
+    };
+    /**
+     * Returns data required to fulfill the transaction.
+     * @param param0 __namedParamaters Object
+     * @param order The order to fulfill, a.k.a. "take"
+     * @param accountAddress The taker's wallet address
+     * @param recipientAddress The optional address to receive the order's item(s) or curriencies. If not specified, defaults to accountAddress.
+     * @param referrerAddress The optional address that referred the order
+     * @returns gasEstimation
+     */
+    OpenSeaPort.prototype.getFulfillOrderArgs = function (_a) {
+        var order = _a.order, accountAddress = _a.accountAddress, recipientAddress = _a.recipientAddress, referrerAddress = _a.referrerAddress;
+        return __awaiter(this, void 0, void 0, function () {
+            var matchingOrder, _b, buy, sell, metadata;
+            return __generator(this, function (_c) {
+                matchingOrder = this._makeMatchingOrder({
+                    order: order,
+                    accountAddress: accountAddress,
+                    recipientAddress: recipientAddress || accountAddress
+                });
+                _b = utils_1.assignOrdersToSides(order, matchingOrder), buy = _b.buy, sell = _b.sell;
+                metadata = this._getMetadata(order, referrerAddress);
+                return [2 /*return*/, this._atomicMatch({ buy: buy, sell: sell, accountAddress: accountAddress, metadata: metadata }, false, true)];
             });
         });
     };
@@ -2926,7 +2980,7 @@ var OpenSeaPort = /** @class */ (function () {
         }
         return undefined;
     };
-    OpenSeaPort.prototype._atomicMatch = function (_a) {
+    OpenSeaPort.prototype._atomicMatch = function (_a, onlyGetGasEstimation, onlyGetCallArgs) {
         var buy = _a.buy, sell = _a.sell, accountAddress = _a.accountAddress, _b = _a.metadata, metadata = _b === void 0 ? constants_1.NULL_BLOCK_HASH : _b;
         return __awaiter(this, void 0, void 0, function () {
             var value, shouldValidateBuy, shouldValidateSell, txHash, txnData, args, gasEstimate, error_13, error_14;
@@ -2946,6 +3000,7 @@ var OpenSeaPort = /** @class */ (function () {
                     case 2:
                         if (!(buy.maker.toLowerCase() == accountAddress.toLowerCase())) return [3 /*break*/, 6];
                         // USER IS THE BUYER, only validate the sell order
+                        // HOTFIX
                         //return [4 /*yield*/, this._buyOrderValidationAndApprovals({ order: buy, counterOrder: sell, accountAddress: accountAddress })];
                         _c.label = 3;
                     case 3:
@@ -2993,26 +3048,34 @@ var OpenSeaPort = /** @class */ (function () {
                     case 9:
                         gasEstimate = _c.sent();
                         txnData.gas = this._correctGasAmount(gasEstimate);
+                        if (onlyGetGasEstimation) {
+                            return [2 /*return*/, txnData.gas];
+                        }
                         return [3 /*break*/, 11];
                     case 10:
                         error_13 = _c.sent();
                         console.error("Failed atomic match with args: ", args, error_13);
                         throw new Error("Oops, the Ethereum network rejected this transaction :( The OpenSea devs have been alerted, but this problem is typically due an item being locked or untransferrable. The exact error was \"" + error_13.message.substr(0, debugging_1.MAX_ERROR_LENGTH) + "...\"");
                     case 11:
-                        _c.trys.push([11, 13, , 14]);
+                        if (onlyGetCallArgs) {
+                            return [2 /*return*/, { args: [args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10]], txnData: txnData }];
+                        }
+                        _c.label = 12;
+                    case 12:
+                        _c.trys.push([12, 14, , 15]);
                         this.logger("Fulfilling order with gas set to " + txnData.gas);
                         return [4 /*yield*/, this._wyvernProtocol.wyvernExchange.atomicMatch_.sendTransactionAsync(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], txnData)];
-                    case 12:
-                        txHash = _c.sent();
-                        return [3 /*break*/, 14];
                     case 13:
+                        txHash = _c.sent();
+                        return [3 /*break*/, 15];
+                    case 14:
                         error_14 = _c.sent();
                         console.error(error_14);
                         this._dispatch(types_1.EventType.TransactionDenied, { error: error_14, buy: buy, sell: sell, accountAddress: accountAddress, matchMetadata: metadata });
                         throw new Error("Failed to authorize transaction: \"" + (error_14.message
                             ? error_14.message
                             : 'user denied') + "...\"");
-                    case 14: return [2 /*return*/, txHash];
+                    case 15: return [2 /*return*/, txHash];
                 }
             });
         });
