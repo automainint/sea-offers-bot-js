@@ -6,6 +6,5 @@ config.json
 list.txt
 log.txt
 proxy.txt
-.progress-*
 .stop
 *.zip
