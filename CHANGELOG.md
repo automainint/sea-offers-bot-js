@@ -1,3 +1,15 @@
+## 08.02.2022
+*Version 0.2.12*
+- Use OpenSea SDK v1.2.8.
+- Add custom fetch cache.
+- Add `gas_price_addition` option.
+- Add `skip_if_too_low` option.
+- Add `--log_fetch_all` option and command line argument.
+- Add `--log_fetch` command line argument.
+- Add `--log_full` command line argument.
+- Add `--api_key` command line argument.
+- Add delay adjustment and fetch delay.
+
 ## 02.02.2022
 *Version 0.2.11*
 - Fix proxy checking.
@@ -14,7 +26,7 @@
 - Timeouts for SDK calls.
 - Add private keys option in config.
 
-## 4.12.2021
+## 04.12.2021
 *Version 0.2.9*
 - Use OpenSea SDK v1.2.2.
 

@@ -3,7 +3,7 @@ Multiple buy orders **bot** for **OpenSea** with automatic price calculation and
 
 If something don't work, feel free to [create an issue][issues-link].
 
-[Contact me][contact-link] if you need access to unobfuscated source code, guidance, or you have a new feature proposal.
+The code is **obfuscated**. [Contact me][contact-link] if you need access to unobfuscated source code, guidance, or you have a new feature proposal.
 
 Join [our Discord][discord-link]!
 
@@ -31,6 +31,7 @@ Have a separate account with small balance for testing unknown bots and services
 ### Optional settings
 - `opensea_key` - OpenSea API key. Optional, recommended for multiple requests.
 - `expiration` - expiration time for offer in hours. Default: `24`.
+- `gas_price_addition` - extra `gwei` to add to the mean gas price when making transactions. Default: `3`.
 - `discard_threshold` - how much consecutive fails to discard an asset. Default: `10`.
 - `price_auto` - enable auto price calculation. Default: `true`.
   - `price_floor` - minimum price in `wETH`. Default: `0.0001`.
@@ -38,7 +39,7 @@ Have a separate account with small balance for testing unknown bots and services
   - `price_epsilon` - price increment in `wETH`. Default: `0.0001`.
   - `price_increment_factor`- minimum price increment factor. Default: `0.1` (10%).
 - Delay options:
-  - `delay` - delay between buy orders in milliseconds, not including processing time. Default: `5000`.
+  - `delay` - delay between buy orders in milliseconds, *including processing time*. Default: `5000`.
   - `random_factor` - additional random delay factor. Default: `0.5`.
   - `random_delay` - additional random delay roof in milliseconds. Default: `0`.
   - Actual delay between offers will be in range:
@@ -47,11 +48,14 @@ Have a separate account with small balance for testing unknown bots and services
   - `process_timeout` - timeout for SDK calls in milliseconds. Default: `10000`.
 - Skipping options:
   - `skip_if_have_bid` - skip offer duplicates. Default: `true`.
-  - `skip_if_too_high` - skip an asset if the roof price is lower then the current highest bid. Default: `true`.
+  - `skip_if_too_low` - skip an asset if the floor price is higher than the current highest bid. Default: `false`.
+  - `skip_if_too_high` - skip an asset if the roof price is lower than the current highest bid. Default: `true`.
   - `skip_if_owner_is_buyer` - skip an asset if you already own it. Default: `true`.
-  - `skip_if_order_created` - skip an asset if an error occured but order was created. Default: `true`.
+  - `skip_if_order_created` - skip an asset if an error occured but order was created. Default: `false`.
 - Logging options:
+  - `log_opensea` - print OpenSea log messages. Default: `false`.
   - `log_fetch` - log fetch calls. Default: `false`.
+    - `log_fetch_all` - log fetch headers and body. Default: `false`.
   - `log_full` - log full error messages. Default: `false`.
 - Proxy settings:
   - `proxy_list` - proxies list file. No proxy by default.
@@ -62,14 +66,12 @@ Have a separate account with small balance for testing unknown bots and services
 - HTTP request options:
   - `cookie` - Cookie data. No Cookie by default.
   - `user_agent` - User-Agent data. No User-Agent by default.
-  - `cache_time` - fetch cache timeout in milliseconds. Default: `5000`.
-  - `fetch_timeout` - timeout for fetch requests in milliseconds. Default: `5000`.
+  - `fetch_timeout` - fetch request timeout in milliseconds. Default: `10000`.
+  - `cache_timeout` - fetch cache timeout in milliseconds. Default: `10000`.
 
 Values `floor`, `roof`, `epsilon` for price calculation will be taken from the assets list file if specified, or from the config otherwise.
 
 If auto price calculation is disabled, only the `floor` value will be used to create a buy order.
-
-**Fetch cache** works only with Node.js **v12** or higher.
 
 Default config file: `config.json`.
 
@@ -127,15 +129,17 @@ socks://127.0.0.1:9050
 
 ## Command line arguments
 - `--file=<file name>` - assets list file. Default: `list.txt`.
-- `--config=<file name>` - config file. Default: `config.json`.
 - `--output=<file name>` - output log file. Default: `log.txt`.
-- `--proxy=<file name>` - proxies list file. Taken from config by default.
-- `--wallet=<address>` - buyer wallet address. Taken from config by default.
-- `--verbose` - print all messages to the console. Disabled by default.
-- `--seaverb` - print OpenSea log messages. Disabled by default.
-- `--printinfo` - don't create buy orders, but print the assets info. Disabled by default.
-- `--stop` - stop currently running bot instance.
+- `--verbose` - print all messages to the console.
+- `--config=<file name>` - config file. Default: `config.json`.
+  - `--proxy=<file name>` - proxies list file.
+  - `--wallet=<address>` - buyer wallet address.
+  - `--log_opensea` - print OpenSea log messages.
+  - `--log_fetch` - log fetch calls.
+  - `--log_fetch_all` - log fetch headers and body.
+  - `--log_full` - log full error messages.
 - `--resume=<line>` - resume progress from specified line.
+- `--stop` - properly stop currently running bot instance.
 
 ## Auto price calculation formula
 For each asset:
