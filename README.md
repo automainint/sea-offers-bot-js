@@ -31,7 +31,6 @@ Have a separate account with small balance for testing unknown bots and services
 ### Optional settings
 - `opensea_key` - OpenSea API key. Optional, recommended for multiple requests.
 - `expiration` - expiration time for offer in hours. Default: `24`.
-- `gas_price_addition` - extra `gwei` to add to the mean gas price when making transactions. Default: `3`.
 - `discard_threshold` - how much consecutive fails to discard an asset. Default: `10`.
 - `price_auto` - enable auto price calculation. Default: `true`.
   - `price_floor` - minimum price in `wETH`. Default: `0.0001`.
@@ -67,7 +66,8 @@ Have a separate account with small balance for testing unknown bots and services
   - `cookie` - Cookie data. No Cookie by default.
   - `user_agent` - User-Agent data. No User-Agent by default.
   - `fetch_timeout` - fetch request timeout in milliseconds. Default: `10000`.
-  - `cache_timeout` - fetch cache timeout in milliseconds. Default: `10000`.
+  - `cache_timeout` - fetch cache timeout in milliseconds. Default: `60000`.
+  - `clear_cache_threshold` - how much consecutive fails to clear cache. Default: `5`.
 
 Values `floor`, `roof`, `epsilon` for price calculation will be taken from the assets list file if specified, or from the config otherwise.
 

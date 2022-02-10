@@ -1,3 +1,10 @@
+## 10.02.2022
+*Version 0.2.13*
+- Update fetch cache.
+- Fix wallet provider engine error handling (`ERR_UNHANDLED_ERROR`).
+- Properly stop wallet provider engine.
+- Add `clear_cache_threshold` option.
+
 ## 08.02.2022
 *Version 0.2.12*
 - Use OpenSea SDK v1.2.8.

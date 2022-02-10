@@ -6,8 +6,9 @@
 const abort_controller        = require('abort-controller');
 const default_fetch_upstream  = require('node-fetch');
 
-const default_fetch_timeout = 10000;
-const default_cache_timeout = 5000;
+const default_fetch_timeout   = 10000;
+const default_cache_timeout   = 5000;
+const default_autoclean_count = 20;
 
 function default_request_filter(url, request_options) {
   return  !request_options ||
@@ -29,10 +30,12 @@ const options = {
   cache_timeout:    default_cache_timeout,
   request_filter:   default_request_filter,
   response_filter:  default_response_filter,
-  wrap_options:     default_wrap_options
+  wrap_options:     default_wrap_options,
+  autoclean_count:  default_autoclean_count
 };
 
-let response_pool = {};
+let response_pool   = {};
+let autoclean_index = 0;
 
 function clear() {
   response_pool = {};
@@ -62,12 +65,39 @@ function check_timeout(url) {
           time_elapsed(url) < options.cache_timeout;
 }
 
+function autoclean() {
+  const entries = Object.entries(response_pool);
+
+  if (entries.length == 0) {
+    return;
+  }
+
+  if (autoclean_index >= entries.length) {
+    autoclean_index = 0;
+  }
+
+  for ( let i = 0;
+        autoclean_index + i < entries.length &&
+        i < options.autoclean_count;
+        i++) {
+    const [ key, value ] = entries[autoclean_index + i];
+
+    if (Date.now() - value.time >= options.cache_timeout) {
+      delete response_pool[key];
+    }
+  }
+
+  autoclean_index += options.autoclean_count;
+}
+
 var fetch;
 
 async function cache(custom_fetch, url, request_options) {
   if (custom_fetch === fetch) {
     throw "Infinite recursion.";
   }
+
+  autoclean();
 
   if (!options.request_filter(url, request_options)) {
     return await custom_fetch(url, request_options);
@@ -81,36 +111,38 @@ async function cache(custom_fetch, url, request_options) {
 }
 
 fetch = function(url, request_options) {
-  return new Promise((resolve, reject) => {
-    let timeout_id      = 0;
-    let wrapped_options = options.wrap_options(request_options);
+  let timeout_id      = 0;
+  let wrapped_options = options.wrap_options(request_options);
 
-    if (!wrapped_options) {
-      wrapped_options = {};
+  if (!wrapped_options) {
+    wrapped_options = {};
+  }
+
+  if (!('signal' in wrapped_options)) {
+    const controller = new abort_controller();
+
+    timeout_id = setTimeout(
+      () => controller.abort(),
+      options.fetch_timeout);
+
+    wrapped_options.signal = controller.signal;
+  }
+
+  const clear_if_have_timeout = () => {
+    if (timeout_id != 0) {
+      clearTimeout(timeout_id);
     }
+  };
 
-    if (!('signal' in wrapped_options)) {
-      const controller = new abort_controller();
-
-      timeout_id = setTimeout(
-        () => controller.abort(),
-        options.fetch_timeout);
-
-      wrapped_options.signal = controller.signal;
-    }
-
-    cache(options.fetch_upstream, url, wrapped_options)
-      .then(response => {
-        if (timeout_id != 0) {
-          clearTimeout(timeout_id);
-        }
-
-        resolve(response);
-      })
-      .catch(error => {
-        reject(error);
-      });
-  });
+  return cache(options.fetch_upstream, url, wrapped_options)
+    .then(response => {
+      clear_if_have_timeout();
+      return response;
+    })
+    .catch(error => {
+      clear_if_have_timeout();
+      throw error;
+    });
 }
 
 module.exports = {
