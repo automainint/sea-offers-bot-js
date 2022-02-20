@@ -132,8 +132,10 @@ socks://127.0.0.1:9050
 - `--output=<file name>` - output log file. Default: `log.txt`.
 - `--verbose` - print all messages to the console.
 - `--config=<file name>` - config file. Default: `config.json`.
-  - `--proxy=<file name>` - proxies list file.
+  - You can override some config options with these arguments:
+  - `--api_key=<API key>` - OpenSea API key.
   - `--wallet=<address>` - buyer wallet address.
+  - `--proxy=<file name>` - proxies list file.
   - `--log_opensea` - print OpenSea log messages.
   - `--log_fetch` - log fetch calls.
   - `--log_fetch_all` - log fetch headers and body.
