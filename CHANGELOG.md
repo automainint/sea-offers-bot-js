@@ -1,4 +1,7 @@
 ## 20.02.2022
+*Version 0.2.15*
+- Add timeout for `getAsset` call.
+
 *Version 0.2.14*
 - Upgrade to OpenSea 2.0.1.
 - Ignore cache for proxy checking and public IP fetching.
