@@ -9,7 +9,7 @@ async function hotfix() {
   console.log('\nRun hotfix...');
 
   /*  Proper error handling.
-  */
+   */
   console.log('* Fix safe-event-emitter error handling.');
   await copyFile(
     './hotfix/safe-event-emitter-index.js',
@@ -21,7 +21,7 @@ async function hotfix() {
     });
 
   /*  Disable wETH approval.
-  */
+   */
   console.log('* Disable opensea-js wETH approval.');
   await copyFile(
     './hotfix/opensea-lib-seaport.js',

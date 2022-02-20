@@ -1,3 +1,9 @@
+## 20.02.2022
+*Version 0.2.14*
+- Upgrade to OpenSea 2.0.1.
+- Ignore cache for proxy checking and public IP fetching.
+- Fix for fetch timeout error handling (`AbortError`).
+
 ## 10.02.2022
 *Version 0.2.13*
 - Update fetch cache.

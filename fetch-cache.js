@@ -94,7 +94,7 @@ var fetch;
 
 async function cache(custom_fetch, url, request_options) {
   if (custom_fetch === fetch) {
-    throw "Infinite recursion.";
+    throw new Error('Infinite recursion.');
   }
 
   autoclean();

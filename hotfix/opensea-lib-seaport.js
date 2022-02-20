@@ -104,15 +104,39 @@ var OpenSeaPort = /** @class */ (function () {
      *  information
      */
     function OpenSeaPort(provider, apiConfig, logger) {
+        var _this = this;
         if (apiConfig === void 0) { apiConfig = {}; }
         var _b;
         // Extra gwei to add to the mean gas price when making transactions
         this.gasPriceAddition = new bignumber_js_1.BigNumber(3);
         // Multiply gas estimate by this factor when making transactions
         this.gasIncreaseFactor = constants_1.DEFAULT_GAS_INCREASE_FACTOR;
+        this._getOrderCreateWyvernExchangeAddress = (function () {
+            var exchangeAddress = null;
+            return function () { return __awaiter(_this, void 0, void 0, function () {
+                var exchangeAddressToUse, exchangeAddressFromApi;
+                var _b;
+                return __generator(this, function (_c) {
+                    switch (_c.label) {
+                        case 0:
+                            exchangeAddressToUse = ((_b = this._wyvernConfigOverride) === null || _b === void 0 ? void 0 : _b.wyvernExchangeContractAddress) ||
+                                exchangeAddress;
+                            if (exchangeAddressToUse) {
+                                return [2 /*return*/, exchangeAddressToUse];
+                            }
+                            return [4 /*yield*/, this.api.getOrderCreateWyvernExchangeAddress()];
+                        case 1:
+                            exchangeAddressFromApi = _c.sent();
+                            exchangeAddress = exchangeAddressFromApi;
+                            return [2 /*return*/, exchangeAddress];
+                    }
+                });
+            }); };
+        })();
         // API config
         apiConfig.networkName = apiConfig.networkName || types_1.Network.Main;
         this.api = new api_1.OpenSeaAPI(apiConfig);
+        this._wyvernConfigOverride = apiConfig.wyvernConfig;
         this._networkName = apiConfig.networkName;
         var readonlyProvider = new web3_1.default.providers.HttpProvider("".concat(this.api.apiBaseUrl, "/").concat(constants_1.RPC_URL_PATH));
         var useReadOnlyProvider = (_b = apiConfig.useReadOnlyProvider) !== null && _b !== void 0 ? _b : true;
@@ -122,15 +146,17 @@ var OpenSeaPort = /** @class */ (function () {
             ? new web3_1.default(readonlyProvider)
             : this.web3;
         // WyvernJS config
-        this._wyvernProtocol = new wyvern_js_1.WyvernProtocol(provider, {
-            network: this._networkName,
-        });
+        this._wyvernProtocol = new wyvern_js_1.WyvernProtocol(provider, __assign({ network: this._networkName }, apiConfig.wyvernConfig));
+        // Wyvern2.2JS config
+        this._wyvern2_2Protocol = new wyvern_js_1.WyvernProtocol(provider, __assign({ network: this._networkName }, utils_1.wyvern2_2ConfigByNetwork[this._networkName]));
         // WyvernJS config for readonly (optimization for infura calls)
         this._wyvernProtocolReadOnly = useReadOnlyProvider
-            ? new wyvern_js_1.WyvernProtocol(readonlyProvider, {
-                network: this._networkName,
-            })
+            ? new wyvern_js_1.WyvernProtocol(readonlyProvider, __assign({ network: this._networkName }, apiConfig.wyvernConfig))
             : this._wyvernProtocol;
+        // Wyvern2.2 JS config for readonly (optimization for infura calls)
+        this._wyvern2_2ProtocolReadOnly = useReadOnlyProvider
+            ? new wyvern_js_1.WyvernProtocol(readonlyProvider, __assign({ network: this._networkName }, utils_1.wyvern2_2ConfigByNetwork[this._networkName]))
+            : this._wyvern2_2Protocol;
         // WrappedNFTLiquidationProxy Config
         this._wrappedNFTFactoryAddress =
             this._networkName == types_1.Network.Main
@@ -513,6 +539,9 @@ var OpenSeaPort = /** @class */ (function () {
                         paymentTokenAddress =
                             paymentTokenAddress ||
                                 WyvernSchemas.tokens[this._networkName].canonicalWrappedEther.address;
+                        if (!paymentTokenAddress) {
+                            throw new Error("Payment token required");
+                        }
                         return [4 /*yield*/, this._makeBundleBuyOrder({
                                 assets: assets,
                                 collection: collection,
@@ -542,7 +571,7 @@ var OpenSeaPort = /** @class */ (function () {
                         _d.label = 3;
                     case 3:
                         _d.trys.push([3, 5, , 6]);
-                        return [4 /*yield*/, this._authorizeOrder(hashedOrder)];
+                        return [4 /*yield*/, this.authorizeOrder(hashedOrder)];
                     case 4:
                         signature = _d.sent();
                         return [3 /*break*/, 6];
@@ -581,6 +610,9 @@ var OpenSeaPort = /** @class */ (function () {
                         paymentTokenAddress =
                             paymentTokenAddress ||
                                 WyvernSchemas.tokens[this._networkName].canonicalWrappedEther.address;
+                        if (!paymentTokenAddress) {
+                            throw new Error("Payment token required");
+                        }
                         return [4 /*yield*/, this._makeBuyOrder({
                                 asset: asset,
                                 quantity: quantity,
@@ -609,7 +641,7 @@ var OpenSeaPort = /** @class */ (function () {
                         _e.label = 3;
                     case 3:
                         _e.trys.push([3, 5, , 6]);
-                        return [4 /*yield*/, this._authorizeOrder(hashedOrder)];
+                        return [4 /*yield*/, this.authorizeOrder(hashedOrder)];
                     case 4:
                         signature = _e.sent();
                         return [3 /*break*/, 6];
@@ -680,7 +712,7 @@ var OpenSeaPort = /** @class */ (function () {
                         _g.label = 5;
                     case 5:
                         _g.trys.push([5, 7, , 8]);
-                        return [4 /*yield*/, this._authorizeOrder(hashedOrder)];
+                        return [4 /*yield*/, this.authorizeOrder(hashedOrder)];
                     case 6:
                         signature = _g.sent();
                         return [3 /*break*/, 8];
@@ -783,7 +815,7 @@ var OpenSeaPort = /** @class */ (function () {
                                         _b.label = 4;
                                     case 4:
                                         _b.trys.push([4, 6, , 7]);
-                                        return [4 /*yield*/, this._authorizeOrder(hashedOrder)];
+                                        return [4 /*yield*/, this.authorizeOrder(hashedOrder)];
                                     case 5:
                                         signature = _b.sent();
                                         return [3 /*break*/, 7];
@@ -888,7 +920,7 @@ var OpenSeaPort = /** @class */ (function () {
                         _f.label = 3;
                     case 3:
                         _f.trys.push([3, 5, , 6]);
-                        return [4 /*yield*/, this._authorizeOrder(hashedOrder)];
+                        return [4 /*yield*/, this.authorizeOrder(hashedOrder)];
                     case 4:
                         signature = _f.sent();
                         return [3 /*break*/, 6];
@@ -962,13 +994,14 @@ var OpenSeaPort = /** @class */ (function () {
     OpenSeaPort.prototype.cancelOrder = function (_b) {
         var order = _b.order, accountAddress = _b.accountAddress;
         return __awaiter(this, void 0, void 0, function () {
-            var transactionHash;
+            var wyvernProtocol, transactionHash;
             var _this = this;
             return __generator(this, function (_c) {
                 switch (_c.label) {
                     case 0:
                         this._dispatch(types_1.EventType.CancelOrder, { order: order, accountAddress: accountAddress });
-                        return [4 /*yield*/, this._wyvernProtocol.wyvernExchange.cancelOrder_.sendTransactionAsync([
+                        wyvernProtocol = this._getWyvernProtocolForOrder(order);
+                        return [4 /*yield*/, wyvernProtocol.wyvernExchange.cancelOrder_.sendTransactionAsync([
                                 order.exchange,
                                 order.maker,
                                 order.taker,
@@ -1000,6 +1033,30 @@ var OpenSeaPort = /** @class */ (function () {
                                     }
                                 });
                             }); })];
+                    case 2:
+                        _c.sent();
+                        return [2 /*return*/];
+                }
+            });
+        });
+    };
+    /**
+     * Cancel all existing orders with a lower nonce on-chain, preventing them from ever being fulfilled.
+     * @param param0 __namedParameters Object
+     * @param accountAddress The order maker's wallet address
+     */
+    OpenSeaPort.prototype.bulkCancelExistingOrders = function (_b) {
+        var accountAddress = _b.accountAddress;
+        return __awaiter(this, void 0, void 0, function () {
+            var transactionHash;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
+                    case 0:
+                        this._dispatch(types_1.EventType.BulkCancelExistingOrders, { accountAddress: accountAddress });
+                        return [4 /*yield*/, this._wyvernProtocol.wyvernExchange.incrementNonce.sendTransactionAsync({ from: accountAddress })];
+                    case 1:
+                        transactionHash = _c.sent();
+                        return [4 /*yield*/, this._confirmTransaction(transactionHash.toString(), types_1.EventType.BulkCancelExistingOrders, "Bulk cancelling existing orders")];
                     case 2:
                         _c.sent();
                         return [2 /*return*/];
@@ -1330,28 +1387,30 @@ var OpenSeaPort = /** @class */ (function () {
      */
     OpenSeaPort.prototype.getCurrentPrice = function (order) {
         return __awaiter(this, void 0, void 0, function () {
-            var currentPrice;
+            var wyvernProtocolReadOnly, currentPrice;
             return __generator(this, function (_b) {
                 switch (_b.label) {
-                    case 0: return [4 /*yield*/, this._wyvernProtocolReadOnly.wyvernExchange.calculateCurrentPrice_.callAsync([
-                            order.exchange,
-                            order.maker,
-                            order.taker,
-                            order.feeRecipient,
-                            order.target,
-                            order.staticTarget,
-                            order.paymentToken,
-                        ], [
-                            order.makerRelayerFee,
-                            order.takerRelayerFee,
-                            order.makerProtocolFee,
-                            order.takerProtocolFee,
-                            order.basePrice,
-                            order.extra,
-                            order.listingTime,
-                            order.expirationTime,
-                            order.salt,
-                        ], order.feeMethod, order.side, order.saleKind, order.howToCall, order.calldata, order.replacementPattern, order.staticExtradata)];
+                    case 0:
+                        wyvernProtocolReadOnly = this._getWyvernProtocolForOrder(order);
+                        return [4 /*yield*/, wyvernProtocolReadOnly.wyvernExchange.calculateCurrentPrice_.callAsync([
+                                order.exchange,
+                                order.maker,
+                                order.taker,
+                                order.feeRecipient,
+                                order.target,
+                                order.staticTarget,
+                                order.paymentToken,
+                            ], [
+                                order.makerRelayerFee,
+                                order.takerRelayerFee,
+                                order.makerProtocolFee,
+                                order.takerProtocolFee,
+                                order.basePrice,
+                                order.extra,
+                                order.listingTime,
+                                order.expirationTime,
+                                order.salt,
+                            ], order.feeMethod, order.side, order.saleKind, order.howToCall, order.calldata, order.replacementPattern, order.staticExtradata)];
                     case 1:
                         currentPrice = _b.sent();
                         return [2 /*return*/, currentPrice];
@@ -1443,7 +1502,7 @@ var OpenSeaPort = /** @class */ (function () {
                         _d.label = 3;
                     case 3:
                         _d.trys.push([3, 5, , 8]);
-                        return [4 /*yield*/, (0, utils_1.estimateGas)(this._getClientsForRead(retries).web3, {
+                        return [4 /*yield*/, (0, utils_1.estimateGas)(this._getClientsForRead({ retries: retries }).web3, {
                                 from: from,
                                 to: abi.target,
                                 data: data,
@@ -1655,7 +1714,7 @@ var OpenSeaPort = /** @class */ (function () {
                         wyAsset = (0, utils_1.getWyvernAsset)(schema, asset);
                         if (!schema.functions.countOf) return [3 /*break*/, 2];
                         abi_1 = schema.functions.countOf(wyAsset);
-                        contract_1 = this._getClientsForRead(retries)
+                        contract_1 = this._getClientsForRead({ retries: retries })
                             .web3.eth.contract([abi_1])
                             .at(abi_1.target);
                         inputValues_1 = abi_1.inputs
@@ -1674,7 +1733,7 @@ var OpenSeaPort = /** @class */ (function () {
                     case 2:
                         if (!schema.functions.ownerOf) return [3 /*break*/, 4];
                         abi_2 = schema.functions.ownerOf(wyAsset);
-                        contract_2 = this._getClientsForRead(retries)
+                        contract_2 = this._getClientsForRead({ retries: retries })
                             .web3.eth.contract([abi_2])
                             .at(abi_2.target);
                         if (abi_2.inputs.filter(function (x) { return x.value === undefined; })[0]) {
@@ -1819,43 +1878,17 @@ var OpenSeaPort = /** @class */ (function () {
         });
     };
     /**
-     * Validate and post an order to the OpenSea orderbook.
+     * Post an order to the OpenSea orderbook.
      * @param order The order to post. Can either be signed by the maker or pre-approved on the Wyvern contract using approveOrder. See https://github.com/ProjectWyvern/wyvern-ethereum/blob/master/contracts/exchange/Exchange.sol#L178
      * @returns The order as stored by the orderbook
      */
     OpenSeaPort.prototype.validateAndPostOrder = function (order) {
         return __awaiter(this, void 0, void 0, function () {
-            var hash, confirmedOrder;
+            var confirmedOrder;
             return __generator(this, function (_b) {
                 switch (_b.label) {
-                    case 0: return [4 /*yield*/, this._wyvernProtocolReadOnly.wyvernExchange.hashOrder_.callAsync([
-                            order.exchange,
-                            order.maker,
-                            order.taker,
-                            order.feeRecipient,
-                            order.target,
-                            order.staticTarget,
-                            order.paymentToken,
-                        ], [
-                            order.makerRelayerFee,
-                            order.takerRelayerFee,
-                            order.makerProtocolFee,
-                            order.takerProtocolFee,
-                            order.basePrice,
-                            order.extra,
-                            order.listingTime,
-                            order.expirationTime,
-                            order.salt,
-                        ], order.feeMethod, order.side, order.saleKind, order.howToCall, order.calldata, order.replacementPattern, order.staticExtradata)];
+                    case 0: return [4 /*yield*/, this.api.postOrder((0, utils_1.orderToJSON)(order))];
                     case 1:
-                        hash = _b.sent();
-                        if (hash !== order.hash) {
-                            console.error(order);
-                            throw new Error("Order couldn't be validated by the exchange due to a hash mismatch. Make sure your wallet is on the right network!");
-                        }
-                        this.logger("Order hashes match");
-                        return [4 /*yield*/, this.api.postOrder((0, utils_1.orderToJSON)(order))];
-                    case 2:
                         confirmedOrder = _b.sent();
                         return [2 /*return*/, confirmedOrder];
                 }
@@ -1903,7 +1936,7 @@ var OpenSeaPort = /** @class */ (function () {
         var buy = _b.buy, sell = _b.sell, accountAddress = _b.accountAddress, _c = _b.metadata, metadata = _c === void 0 ? constants_1.NULL_BLOCK_HASH : _c;
         if (retries === void 0) { retries = 1; }
         return __awaiter(this, void 0, void 0, function () {
-            var value, error_10;
+            var value, wyvernProtocol, wyvernProtocolReadOnly, error_10;
             return __generator(this, function (_d) {
                 switch (_d.label) {
                     case 0:
@@ -1914,8 +1947,16 @@ var OpenSeaPort = /** @class */ (function () {
                         value = _d.sent();
                         _d.label = 2;
                     case 2:
-                        _d.trys.push([2, 4, , 7]);
-                        return [4 /*yield*/, this._getClientsForRead(retries).wyvernProtocol.wyvernExchange.atomicMatch_.estimateGasAsync([
+                        wyvernProtocol = this._getWyvernProtocolForOrder(buy);
+                        wyvernProtocolReadOnly = this._getWyvernProtocolForOrder(buy, true);
+                        _d.label = 3;
+                    case 3:
+                        _d.trys.push([3, 5, , 8]);
+                        return [4 /*yield*/, this._getClientsForRead({
+                                retries: retries,
+                                wyvernProtocol: wyvernProtocol,
+                                wyvernProtocolReadOnly: wyvernProtocolReadOnly,
+                            }).wyvernProtocol.wyvernExchange.atomicMatch_.estimateGasAsync([
                                 buy.exchange,
                                 buy.maker,
                                 buy.taker,
@@ -1968,19 +2009,19 @@ var OpenSeaPort = /** @class */ (function () {
                             // Typescript error in estimate gas method, so use any
                             // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             { from: accountAddress, value: value })];
-                    case 3: return [2 /*return*/, _d.sent()];
-                    case 4:
+                    case 4: return [2 /*return*/, _d.sent()];
+                    case 5:
                         error_10 = _d.sent();
                         if (retries <= 0) {
                             console.error(error_10);
                             return [2 /*return*/, undefined];
                         }
                         return [4 /*yield*/, (0, utils_1.delay)(200)];
-                    case 5:
+                    case 6:
                         _d.sent();
                         return [4 /*yield*/, this._estimateGasForMatch({ buy: buy, sell: sell, accountAddress: accountAddress, metadata: metadata }, retries - 1)];
-                    case 6: return [2 /*return*/, _d.sent()];
-                    case 7: return [2 /*return*/];
+                    case 7: return [2 /*return*/, _d.sent()];
+                    case 8: return [2 /*return*/];
                 }
             });
         });
@@ -2035,14 +2076,16 @@ var OpenSeaPort = /** @class */ (function () {
      * Internal method exposed for dev flexibility.
      * @param accountAddress The user's wallet address
      * @param retries Optional number of retries to do
+     * @param wyvernProtocol optional wyvern protocol override
      */
-    OpenSeaPort.prototype._getProxy = function (accountAddress, retries) {
+    OpenSeaPort.prototype._getProxy = function (accountAddress, retries, wyvernProtocol) {
         if (retries === void 0) { retries = 0; }
+        if (wyvernProtocol === void 0) { wyvernProtocol = this._wyvernProtocolReadOnly; }
         return __awaiter(this, void 0, void 0, function () {
             var proxyAddress;
             return __generator(this, function (_b) {
                 switch (_b.label) {
-                    case 0: return [4 /*yield*/, this._wyvernProtocolReadOnly.wyvernProxyRegistry.proxies.callAsync(accountAddress)];
+                    case 0: return [4 /*yield*/, wyvernProtocol.wyvernProxyRegistry.proxies.callAsync(accountAddress)];
                     case 1:
                         proxyAddress = _b.sent();
                         if (proxyAddress == "0x") {
@@ -2069,8 +2112,10 @@ var OpenSeaPort = /** @class */ (function () {
      *  trades can happen when the maker isn't online.
      * Internal method exposed for dev flexibility.
      * @param accountAddress The user's wallet address
+     * @param wyvernProtocol optional wyvern protocol override
      */
-    OpenSeaPort.prototype._initializeProxy = function (accountAddress) {
+    OpenSeaPort.prototype._initializeProxy = function (accountAddress, wyvernProtocol) {
+        if (wyvernProtocol === void 0) { wyvernProtocol = this._wyvernProtocol; }
         return __awaiter(this, void 0, void 0, function () {
             var txnData, gasEstimate, transactionHash, proxyAddress;
             var _this = this;
@@ -2080,17 +2125,17 @@ var OpenSeaPort = /** @class */ (function () {
                         this._dispatch(types_1.EventType.InitializeAccount, { accountAddress: accountAddress });
                         this.logger("Initializing proxy for account: ".concat(accountAddress));
                         txnData = { from: accountAddress };
-                        return [4 /*yield*/, this._wyvernProtocolReadOnly.wyvernProxyRegistry.registerProxy.estimateGasAsync(txnData)];
+                        return [4 /*yield*/, wyvernProtocol.wyvernProxyRegistry.registerProxy.estimateGasAsync(txnData)];
                     case 1:
                         gasEstimate = _b.sent();
-                        return [4 /*yield*/, this._wyvernProtocol.wyvernProxyRegistry.registerProxy.sendTransactionAsync(__assign(__assign({}, txnData), { gas: this._correctGasAmount(gasEstimate) }))];
+                        return [4 /*yield*/, wyvernProtocol.wyvernProxyRegistry.registerProxy.sendTransactionAsync(__assign(__assign({}, txnData), { gas: this._correctGasAmount(gasEstimate) }))];
                     case 2:
                         transactionHash = _b.sent();
                         return [4 /*yield*/, this._confirmTransaction(transactionHash, types_1.EventType.InitializeAccount, "Initializing proxy for account", function () { return __awaiter(_this, void 0, void 0, function () {
                                 var polledProxy;
                                 return __generator(this, function (_b) {
                                     switch (_b.label) {
-                                        case 0: return [4 /*yield*/, this._getProxy(accountAddress)];
+                                        case 0: return [4 /*yield*/, this._getProxy(accountAddress, 0, wyvernProtocol)];
                                         case 1:
                                             polledProxy = _b.sent();
                                             return [2 /*return*/, !!polledProxy];
@@ -2099,7 +2144,7 @@ var OpenSeaPort = /** @class */ (function () {
                             }); })];
                     case 3:
                         _b.sent();
-                        return [4 /*yield*/, this._getProxy(accountAddress, 10)];
+                        return [4 /*yield*/, this._getProxy(accountAddress, 10, wyvernProtocol)];
                     case 4:
                         proxyAddress = _b.sent();
                         if (!proxyAddress) {
@@ -2150,7 +2195,7 @@ var OpenSeaPort = /** @class */ (function () {
     OpenSeaPort.prototype._makeBuyOrder = function (_b) {
         var asset = _b.asset, quantity = _b.quantity, accountAddress = _b.accountAddress, startAmount = _b.startAmount, _c = _b.expirationTime, expirationTime = _c === void 0 ? 0 : _c, paymentTokenAddress = _b.paymentTokenAddress, _d = _b.extraBountyBasisPoints, extraBountyBasisPoints = _d === void 0 ? 0 : _d, sellOrder = _b.sellOrder, referrerAddress = _b.referrerAddress;
         return __awaiter(this, void 0, void 0, function () {
-            var schema, quantityBN, wyAsset, openSeaAsset, taker, _e, totalBuyerFeeBasisPoints, totalSellerFeeBasisPoints, _f, makerRelayerFee, takerRelayerFee, makerProtocolFee, takerProtocolFee, makerReferrerFee, feeRecipient, feeMethod, _g, target, calldata, replacementPattern, _h, basePrice, extra, paymentToken, times, _j, staticTarget, staticExtradata;
+            var schema, quantityBN, wyAsset, openSeaAsset, taker, _e, totalBuyerFeeBasisPoints, totalSellerFeeBasisPoints, _f, makerRelayerFee, takerRelayerFee, makerProtocolFee, takerProtocolFee, makerReferrerFee, feeRecipient, feeMethod, _g, target, calldata, replacementPattern, _h, basePrice, extra, paymentToken, times, _j, staticTarget, staticExtradata, exchange;
             return __generator(this, function (_k) {
                 switch (_k.label) {
                     case 0:
@@ -2170,7 +2215,9 @@ var OpenSeaPort = /** @class */ (function () {
                     case 2:
                         _e = _k.sent(), totalBuyerFeeBasisPoints = _e.totalBuyerFeeBasisPoints, totalSellerFeeBasisPoints = _e.totalSellerFeeBasisPoints;
                         _f = this._getBuyFeeParameters(totalBuyerFeeBasisPoints, totalSellerFeeBasisPoints, sellOrder), makerRelayerFee = _f.makerRelayerFee, takerRelayerFee = _f.takerRelayerFee, makerProtocolFee = _f.makerProtocolFee, takerProtocolFee = _f.takerProtocolFee, makerReferrerFee = _f.makerReferrerFee, feeRecipient = _f.feeRecipient, feeMethod = _f.feeMethod;
-                        _g = (0, schema_1.encodeBuy)(schema, wyAsset, accountAddress), target = _g.target, calldata = _g.calldata, replacementPattern = _g.replacementPattern;
+                        _g = (0, schema_1.encodeBuy)(schema, wyAsset, accountAddress, (sellOrder === null || sellOrder === void 0 ? void 0 : sellOrder.waitingForBestCounterOrder)
+                            ? undefined
+                            : utils_1.merkleValidatorByNetwork[this._networkName]), target = _g.target, calldata = _g.calldata, replacementPattern = _g.replacementPattern;
                         return [4 /*yield*/, this._getPriceParameters(types_1.OrderSide.Buy, paymentTokenAddress, expirationTime, startAmount)];
                     case 3:
                         _h = _k.sent(), basePrice = _h.basePrice, extra = _h.extra, paymentToken = _h.paymentToken;
@@ -2181,8 +2228,12 @@ var OpenSeaPort = /** @class */ (function () {
                             })];
                     case 4:
                         _j = _k.sent(), staticTarget = _j.staticTarget, staticExtradata = _j.staticExtradata;
+                        return [4 /*yield*/, this._getOrderCreateWyvernExchangeAddress()];
+                    case 5:
+                        exchange = _k.sent();
                         return [2 /*return*/, {
-                                exchange: wyvern_js_1.WyvernProtocol.getExchangeContractAddress(this._networkName),
+                                exchange: exchange ||
+                                    wyvern_js_1.WyvernProtocol.getExchangeContractAddress(this._networkName),
                                 maker: accountAddress,
                                 taker: taker,
                                 quantity: quantityBN,
@@ -2197,7 +2248,9 @@ var OpenSeaPort = /** @class */ (function () {
                                 side: types_1.OrderSide.Buy,
                                 saleKind: types_1.SaleKind.FixedPrice,
                                 target: target,
-                                howToCall: types_1.HowToCall.Call,
+                                howToCall: target === utils_1.merkleValidatorByNetwork[this._networkName]
+                                    ? types_1.HowToCall.DelegateCall
+                                    : types_1.HowToCall.Call,
                                 calldata: calldata,
                                 replacementPattern: replacementPattern,
                                 staticTarget: staticTarget,
@@ -2221,7 +2274,7 @@ var OpenSeaPort = /** @class */ (function () {
     OpenSeaPort.prototype._makeSellOrder = function (_b) {
         var asset = _b.asset, quantity = _b.quantity, accountAddress = _b.accountAddress, startAmount = _b.startAmount, endAmount = _b.endAmount, listingTime = _b.listingTime, expirationTime = _b.expirationTime, waitForHighestBid = _b.waitForHighestBid, _c = _b.englishAuctionReservePrice, englishAuctionReservePrice = _c === void 0 ? 0 : _c, paymentTokenAddress = _b.paymentTokenAddress, extraBountyBasisPoints = _b.extraBountyBasisPoints, buyerAddress = _b.buyerAddress;
         return __awaiter(this, void 0, void 0, function () {
-            var schema, quantityBN, wyAsset, openSeaAsset, _d, totalSellerFeeBasisPoints, totalBuyerFeeBasisPoints, sellerBountyBasisPoints, _e, target, calldata, replacementPattern, orderSaleKind, _f, basePrice, extra, paymentToken, reservePrice, times, _g, makerRelayerFee, takerRelayerFee, makerProtocolFee, takerProtocolFee, makerReferrerFee, feeRecipient, feeMethod, _h, staticTarget, staticExtradata;
+            var schema, quantityBN, wyAsset, openSeaAsset, _d, totalSellerFeeBasisPoints, totalBuyerFeeBasisPoints, sellerBountyBasisPoints, _e, target, calldata, replacementPattern, orderSaleKind, _f, basePrice, extra, paymentToken, reservePrice, times, _g, makerRelayerFee, takerRelayerFee, makerProtocolFee, takerProtocolFee, makerReferrerFee, feeRecipient, feeMethod, _h, staticTarget, staticExtradata, exchange;
             return __generator(this, function (_j) {
                 switch (_j.label) {
                     case 0:
@@ -2239,7 +2292,9 @@ var OpenSeaPort = /** @class */ (function () {
                             })];
                     case 2:
                         _d = _j.sent(), totalSellerFeeBasisPoints = _d.totalSellerFeeBasisPoints, totalBuyerFeeBasisPoints = _d.totalBuyerFeeBasisPoints, sellerBountyBasisPoints = _d.sellerBountyBasisPoints;
-                        _e = (0, schema_1.encodeSell)(schema, wyAsset, accountAddress), target = _e.target, calldata = _e.calldata, replacementPattern = _e.replacementPattern;
+                        _e = (0, schema_1.encodeSell)(schema, wyAsset, accountAddress, waitForHighestBid
+                            ? undefined
+                            : utils_1.merkleValidatorByNetwork[this._networkName]), target = _e.target, calldata = _e.calldata, replacementPattern = _e.replacementPattern;
                         orderSaleKind = endAmount != null && endAmount !== startAmount
                             ? types_1.SaleKind.DutchAuction
                             : types_1.SaleKind.FixedPrice;
@@ -2254,8 +2309,12 @@ var OpenSeaPort = /** @class */ (function () {
                             })];
                     case 4:
                         _h = _j.sent(), staticTarget = _h.staticTarget, staticExtradata = _h.staticExtradata;
+                        return [4 /*yield*/, this._getOrderCreateWyvernExchangeAddress()];
+                    case 5:
+                        exchange = _j.sent();
                         return [2 /*return*/, {
-                                exchange: wyvern_js_1.WyvernProtocol.getExchangeContractAddress(this._networkName),
+                                exchange: exchange ||
+                                    wyvern_js_1.WyvernProtocol.getExchangeContractAddress(this._networkName),
                                 maker: accountAddress,
                                 taker: buyerAddress,
                                 quantity: quantityBN,
@@ -2273,7 +2332,9 @@ var OpenSeaPort = /** @class */ (function () {
                                 side: types_1.OrderSide.Sell,
                                 saleKind: orderSaleKind,
                                 target: target,
-                                howToCall: types_1.HowToCall.Call,
+                                howToCall: target === utils_1.merkleValidatorByNetwork[this._networkName]
+                                    ? types_1.HowToCall.DelegateCall
+                                    : types_1.HowToCall.Call,
                                 calldata: calldata,
                                 replacementPattern: replacementPattern,
                                 staticTarget: staticTarget,
@@ -2376,7 +2437,7 @@ var OpenSeaPort = /** @class */ (function () {
     OpenSeaPort.prototype._makeBundleBuyOrder = function (_b) {
         var assets = _b.assets, collection = _b.collection, quantities = _b.quantities, accountAddress = _b.accountAddress, startAmount = _b.startAmount, _c = _b.expirationTime, expirationTime = _c === void 0 ? 0 : _c, paymentTokenAddress = _b.paymentTokenAddress, _d = _b.extraBountyBasisPoints, extraBountyBasisPoints = _d === void 0 ? 0 : _d, sellOrder = _b.sellOrder, referrerAddress = _b.referrerAddress;
         return __awaiter(this, void 0, void 0, function () {
-            var quantityBNs, bundle, orderedSchemas, taker, asset, _e, _f, totalBuyerFeeBasisPoints, totalSellerFeeBasisPoints, _g, makerRelayerFee, takerRelayerFee, makerProtocolFee, takerProtocolFee, makerReferrerFee, feeRecipient, feeMethod, _h, calldata, replacementPattern, _j, basePrice, extra, paymentToken, times;
+            var quantityBNs, bundle, orderedSchemas, taker, asset, _e, _f, totalBuyerFeeBasisPoints, totalSellerFeeBasisPoints, _g, makerRelayerFee, takerRelayerFee, makerProtocolFee, takerProtocolFee, makerReferrerFee, feeRecipient, feeMethod, _h, calldata, replacementPattern, _j, basePrice, extra, paymentToken, times, exchange;
             var _this = this;
             return __generator(this, function (_k) {
                 switch (_k.label) {
@@ -2411,8 +2472,12 @@ var OpenSeaPort = /** @class */ (function () {
                     case 5:
                         _j = _k.sent(), basePrice = _j.basePrice, extra = _j.extra, paymentToken = _j.paymentToken;
                         times = this._getTimeParameters(expirationTime);
+                        return [4 /*yield*/, this._getOrderCreateWyvernExchangeAddress()];
+                    case 6:
+                        exchange = _k.sent();
                         return [2 /*return*/, {
-                                exchange: wyvern_js_1.WyvernProtocol.getExchangeContractAddress(this._networkName),
+                                exchange: exchange ||
+                                    wyvern_js_1.WyvernProtocol.getExchangeContractAddress(this._networkName),
                                 maker: accountAddress,
                                 taker: taker,
                                 quantity: (0, utils_1.makeBigNumber)(1),
@@ -2450,7 +2515,7 @@ var OpenSeaPort = /** @class */ (function () {
     OpenSeaPort.prototype._makeBundleSellOrder = function (_b) {
         var bundleName = _b.bundleName, bundleDescription = _b.bundleDescription, bundleExternalLink = _b.bundleExternalLink, assets = _b.assets, collection = _b.collection, quantities = _b.quantities, accountAddress = _b.accountAddress, startAmount = _b.startAmount, endAmount = _b.endAmount, listingTime = _b.listingTime, expirationTime = _b.expirationTime, waitForHighestBid = _b.waitForHighestBid, _c = _b.englishAuctionReservePrice, englishAuctionReservePrice = _c === void 0 ? 0 : _c, paymentTokenAddress = _b.paymentTokenAddress, extraBountyBasisPoints = _b.extraBountyBasisPoints, buyerAddress = _b.buyerAddress;
         return __awaiter(this, void 0, void 0, function () {
-            var quantityBNs, bundle, orderedSchemas, asset, _d, _e, totalSellerFeeBasisPoints, totalBuyerFeeBasisPoints, sellerBountyBasisPoints, _f, calldata, replacementPattern, _g, basePrice, extra, paymentToken, reservePrice, times, orderSaleKind, _h, makerRelayerFee, takerRelayerFee, makerProtocolFee, takerProtocolFee, makerReferrerFee, feeRecipient;
+            var quantityBNs, bundle, orderedSchemas, asset, _d, _e, totalSellerFeeBasisPoints, totalBuyerFeeBasisPoints, sellerBountyBasisPoints, _f, calldata, replacementPattern, _g, basePrice, extra, paymentToken, reservePrice, times, orderSaleKind, _h, makerRelayerFee, takerRelayerFee, makerProtocolFee, takerProtocolFee, makerReferrerFee, feeRecipient, exchange;
             var _this = this;
             return __generator(this, function (_j) {
                 switch (_j.label) {
@@ -2490,8 +2555,12 @@ var OpenSeaPort = /** @class */ (function () {
                             ? types_1.SaleKind.DutchAuction
                             : types_1.SaleKind.FixedPrice;
                         _h = this._getSellFeeParameters(totalBuyerFeeBasisPoints, totalSellerFeeBasisPoints, waitForHighestBid, sellerBountyBasisPoints), makerRelayerFee = _h.makerRelayerFee, takerRelayerFee = _h.takerRelayerFee, makerProtocolFee = _h.makerProtocolFee, takerProtocolFee = _h.takerProtocolFee, makerReferrerFee = _h.makerReferrerFee, feeRecipient = _h.feeRecipient;
+                        return [4 /*yield*/, this._getOrderCreateWyvernExchangeAddress()];
+                    case 6:
+                        exchange = _j.sent();
                         return [2 /*return*/, {
-                                exchange: wyvern_js_1.WyvernProtocol.getExchangeContractAddress(this._networkName),
+                                exchange: exchange ||
+                                    wyvern_js_1.WyvernProtocol.getExchangeContractAddress(this._networkName),
                                 maker: accountAddress,
                                 taker: buyerAddress,
                                 quantity: (0, utils_1.makeBigNumber)(1),
@@ -2534,11 +2603,12 @@ var OpenSeaPort = /** @class */ (function () {
         accountAddress = (0, utils_1.validateAndFormatWalletAddress)(this.web3, accountAddress);
         recipientAddress = (0, utils_1.validateAndFormatWalletAddress)(this.web3, recipientAddress);
         var computeOrderParams = function () {
+            var shouldValidate = order.target === utils_1.merkleValidatorByNetwork[_this._networkName];
             if ("asset" in order.metadata) {
                 var schema = _this._getSchema(order.metadata.schema);
                 return order.side == types_1.OrderSide.Buy
-                    ? (0, schema_1.encodeSell)(schema, order.metadata.asset, recipientAddress)
-                    : (0, schema_1.encodeBuy)(schema, order.metadata.asset, recipientAddress);
+                    ? (0, schema_1.encodeSell)(schema, order.metadata.asset, recipientAddress, shouldValidate ? order.target : undefined)
+                    : (0, schema_1.encodeBuy)(schema, order.metadata.asset, recipientAddress, shouldValidate ? order.target : undefined);
             }
             else if ("bundle" in order.metadata) {
                 // We're matching a bundle order
@@ -2595,7 +2665,7 @@ var OpenSeaPort = /** @class */ (function () {
             salt: wyvern_js_1.WyvernProtocol.generatePseudoRandomSalt(),
             metadata: order.metadata,
         };
-        return __assign(__assign({}, matchingOrder), { hash: (0, utils_1.getOrderHash)(matchingOrder) });
+        return matchingOrder;
     };
     /**
      * Validate against Wyvern that a buy and sell order can match
@@ -2611,7 +2681,7 @@ var OpenSeaPort = /** @class */ (function () {
         var buy = _b.buy, sell = _b.sell, accountAddress = _b.accountAddress, _c = _b.shouldValidateBuy, shouldValidateBuy = _c === void 0 ? false : _c, _d = _b.shouldValidateSell, shouldValidateSell = _d === void 0 ? false : _d;
         if (retries === void 0) { retries = 1; }
         return __awaiter(this, void 0, void 0, function () {
-            var buyValid, sellValid, canMatch, calldataCanMatch, error_11;
+            var buyValid, sellValid, wyvernProtocol, wyvernProtocolReadOnly, canMatch, calldataCanMatch, error_11;
             return __generator(this, function (_e) {
                 switch (_e.label) {
                     case 0:
@@ -2635,11 +2705,15 @@ var OpenSeaPort = /** @class */ (function () {
                             throw new Error("Invalid sell order. It may have recently been removed. Please refresh the page and try again!");
                         }
                         _e.label = 4;
-                    case 4: return [4 /*yield*/, (0, debugging_1.requireOrdersCanMatch)(this._getClientsForRead(retries).wyvernProtocol, { buy: buy, sell: sell, accountAddress: accountAddress })];
+                    case 4:
+                        wyvernProtocol = this._getWyvernProtocolForOrder(buy);
+                        wyvernProtocolReadOnly = this._getWyvernProtocolForOrder(buy, true);
+                        return [4 /*yield*/, (0, debugging_1.requireOrdersCanMatch)(this._getClientsForRead({ retries: retries, wyvernProtocol: wyvernProtocol }).wyvernProtocol, { buy: buy, sell: sell, accountAddress: accountAddress })];
                     case 5:
                         canMatch = _e.sent();
                         this.logger("Orders matching: ".concat(canMatch));
-                        return [4 /*yield*/, (0, debugging_1.requireOrderCalldataCanMatch)(this._getClientsForRead(retries).wyvernProtocol, { buy: buy, sell: sell })];
+                        return [4 /*yield*/, (0, debugging_1.requireOrderCalldataCanMatch)(this._getClientsForRead({ retries: retries, wyvernProtocolReadOnly: wyvernProtocolReadOnly })
+                                .wyvernProtocol, { buy: buy, sell: sell })];
                     case 6:
                         calldataCanMatch = _e.sent();
                         this.logger("Order calldata matching: ".concat(calldataCanMatch));
@@ -2683,7 +2757,7 @@ var OpenSeaPort = /** @class */ (function () {
     OpenSeaPort.prototype._sellOrderValidationAndApprovals = function (_b) {
         var order = _b.order, accountAddress = _b.accountAddress;
         return __awaiter(this, void 0, void 0, function () {
-            var wyAssets, schemaNames, tokenAddress, minimumAmount, sellValid;
+            var wyAssets, schemaNames, tokenAddress, wyvernProtocol, minimumAmount, tokenTransferProxyAddress, sellValid;
             return __generator(this, function (_c) {
                 switch (_c.label) {
                     case 0:
@@ -2698,20 +2772,28 @@ var OpenSeaPort = /** @class */ (function () {
                                 ? [order.metadata.schema]
                                 : [];
                         tokenAddress = order.paymentToken;
-                        return [4 /*yield*/, this._approveAll({ schemaNames: schemaNames, wyAssets: wyAssets, accountAddress: accountAddress })];
+                        wyvernProtocol = this._getWyvernProtocolForOrder(order);
+                        return [4 /*yield*/, this._approveAll({
+                                schemaNames: schemaNames,
+                                wyAssets: wyAssets,
+                                accountAddress: accountAddress,
+                                wyvernProtocol: wyvernProtocol,
+                            })];
                     case 1:
                         _c.sent();
                         if (!(tokenAddress != constants_1.NULL_ADDRESS)) return [3 /*break*/, 3];
                         minimumAmount = (0, utils_1.makeBigNumber)(order.basePrice);
+                        tokenTransferProxyAddress = this._getWyvernTokenTransferProxyAddressForOrder(order);
                         return [4 /*yield*/, this.approveFungibleToken({
                                 accountAddress: accountAddress,
                                 tokenAddress: tokenAddress,
                                 minimumAmount: minimumAmount,
+                                proxyAddress: tokenTransferProxyAddress,
                             })];
                     case 2:
                         _c.sent();
                         _c.label = 3;
-                    case 3: return [4 /*yield*/, this._wyvernProtocolReadOnly.wyvernExchange.validateOrderParameters_.callAsync([
+                    case 3: return [4 /*yield*/, wyvernProtocol.wyvernExchange.validateOrderParameters_.callAsync([
                             order.exchange,
                             order.maker,
                             order.taker,
@@ -2747,9 +2829,9 @@ var OpenSeaPort = /** @class */ (function () {
      * @param order Order to approve
      * @returns Transaction hash of the approval transaction
      */
-    OpenSeaPort.prototype._approveOrder = function (order) {
+    OpenSeaPort.prototype.approveOrder = function (order) {
         return __awaiter(this, void 0, void 0, function () {
-            var accountAddress, includeInOrderBook, transactionHash;
+            var accountAddress, includeInOrderBook, wyvernProtocol, transactionHash;
             var _this = this;
             return __generator(this, function (_b) {
                 switch (_b.label) {
@@ -2757,7 +2839,8 @@ var OpenSeaPort = /** @class */ (function () {
                         accountAddress = order.maker;
                         includeInOrderBook = true;
                         this._dispatch(types_1.EventType.ApproveOrder, { order: order, accountAddress: accountAddress });
-                        return [4 /*yield*/, this._wyvernProtocol.wyvernExchange.approveOrder_.sendTransactionAsync([
+                        wyvernProtocol = this._getWyvernProtocolForOrder(order);
+                        return [4 /*yield*/, wyvernProtocol.wyvernExchange.approveOrder_.sendTransactionAsync([
                                 order.exchange,
                                 order.maker,
                                 order.taker,
@@ -2798,28 +2881,30 @@ var OpenSeaPort = /** @class */ (function () {
     };
     OpenSeaPort.prototype._validateOrder = function (order) {
         return __awaiter(this, void 0, void 0, function () {
-            var isValid;
+            var wyvernProtocolReadOnly, isValid;
             return __generator(this, function (_b) {
                 switch (_b.label) {
-                    case 0: return [4 /*yield*/, this._wyvernProtocolReadOnly.wyvernExchange.validateOrder_.callAsync([
-                            order.exchange,
-                            order.maker,
-                            order.taker,
-                            order.feeRecipient,
-                            order.target,
-                            order.staticTarget,
-                            order.paymentToken,
-                        ], [
-                            order.makerRelayerFee,
-                            order.takerRelayerFee,
-                            order.makerProtocolFee,
-                            order.takerProtocolFee,
-                            order.basePrice,
-                            order.extra,
-                            order.listingTime,
-                            order.expirationTime,
-                            order.salt,
-                        ], order.feeMethod, order.side, order.saleKind, order.howToCall, order.calldata, order.replacementPattern, order.staticExtradata, order.v || 0, order.r || constants_1.NULL_BLOCK_HASH, order.s || constants_1.NULL_BLOCK_HASH)];
+                    case 0:
+                        wyvernProtocolReadOnly = this._getWyvernProtocolForOrder(order, true);
+                        return [4 /*yield*/, wyvernProtocolReadOnly.wyvernExchange.validateOrder_.callAsync([
+                                order.exchange,
+                                order.maker,
+                                order.taker,
+                                order.feeRecipient,
+                                order.target,
+                                order.staticTarget,
+                                order.paymentToken,
+                            ], [
+                                order.makerRelayerFee,
+                                order.takerRelayerFee,
+                                order.makerProtocolFee,
+                                order.takerProtocolFee,
+                                order.basePrice,
+                                order.extra,
+                                order.listingTime,
+                                order.expirationTime,
+                                order.salt,
+                            ], order.feeMethod, order.side, order.saleKind, order.howToCall, order.calldata, order.replacementPattern, order.staticExtradata, order.v || 0, order.r || constants_1.NULL_BLOCK_HASH, order.s || constants_1.NULL_BLOCK_HASH)];
                     case 1:
                         isValid = _b.sent();
                         return [2 /*return*/, isValid];
@@ -2828,27 +2913,28 @@ var OpenSeaPort = /** @class */ (function () {
         });
     };
     OpenSeaPort.prototype._approveAll = function (_b) {
-        var schemaNames = _b.schemaNames, wyAssets = _b.wyAssets, accountAddress = _b.accountAddress, proxyAddress = _b.proxyAddress;
+        var schemaNames = _b.schemaNames, wyAssets = _b.wyAssets, accountAddress = _b.accountAddress, proxyAddress = _b.proxyAddress, _c = _b.wyvernProtocol, wyvernProtocol = _c === void 0 ? this._wyvernProtocol : _c;
         return __awaiter(this, void 0, void 0, function () {
-            var _c, contractsWithApproveAll;
+            var _d, contractsWithApproveAll;
             var _this = this;
-            return __generator(this, function (_d) {
-                switch (_d.label) {
+            return __generator(this, function (_e) {
+                switch (_e.label) {
                     case 0:
-                        _c = proxyAddress;
-                        if (_c) return [3 /*break*/, 2];
-                        return [4 /*yield*/, this._getProxy(accountAddress)];
+                        _d = proxyAddress;
+                        if (_d) return [3 /*break*/, 2];
+                        return [4 /*yield*/, this._getProxy(accountAddress, 0, wyvernProtocol)];
                     case 1:
-                        _c = (_d.sent());
-                        _d.label = 2;
+                        _d = (_e.sent());
+                        _e.label = 2;
                     case 2:
                         proxyAddress =
-                            _c || undefined;
+                            _d ||
+                                undefined;
                         if (!!proxyAddress) return [3 /*break*/, 4];
-                        return [4 /*yield*/, this._initializeProxy(accountAddress)];
+                        return [4 /*yield*/, this._initializeProxy(accountAddress, wyvernProtocol)];
                     case 3:
-                        proxyAddress = _d.sent();
-                        _d.label = 4;
+                        proxyAddress = _e.sent();
+                        _e.label = 4;
                     case 4:
                         contractsWithApproveAll = new Set();
                         return [2 /*return*/, Promise.all(wyAssets.map(function (wyAsset, i) { return __awaiter(_this, void 0, void 0, function () {
@@ -2926,7 +3012,7 @@ var OpenSeaPort = /** @class */ (function () {
     OpenSeaPort.prototype._buyOrderValidationAndApprovals = function (_b) {
         var order = _b.order, counterOrder = _b.counterOrder, accountAddress = _b.accountAddress;
         return __awaiter(this, void 0, void 0, function () {
-            var tokenAddress, balance, minimumAmount, buyValid;
+            var tokenAddress, balance, minimumAmount, tokenTransferProxyAddress, wyvernProtocolReadOnly, buyValid;
             return __generator(this, function (_c) {
                 switch (_c.label) {
                     case 0:
@@ -2955,37 +3041,41 @@ var OpenSeaPort = /** @class */ (function () {
                                 throw new Error("Insufficient balance.");
                             }
                         }
+                        tokenTransferProxyAddress = this._getWyvernTokenTransferProxyAddressForOrder(order);
                         // Check token approval
                         // This can be done at a higher level to show UI
                         return [4 /*yield*/, this.approveFungibleToken({
                                 accountAddress: accountAddress,
                                 tokenAddress: tokenAddress,
                                 minimumAmount: minimumAmount,
+                                proxyAddress: tokenTransferProxyAddress,
                             })];
                     case 4:
                         // Check token approval
                         // This can be done at a higher level to show UI
                         _c.sent();
                         _c.label = 5;
-                    case 5: return [4 /*yield*/, this._wyvernProtocolReadOnly.wyvernExchange.validateOrderParameters_.callAsync([
-                            order.exchange,
-                            order.maker,
-                            order.taker,
-                            order.feeRecipient,
-                            order.target,
-                            order.staticTarget,
-                            order.paymentToken,
-                        ], [
-                            order.makerRelayerFee,
-                            order.takerRelayerFee,
-                            order.makerProtocolFee,
-                            order.takerProtocolFee,
-                            order.basePrice,
-                            order.extra,
-                            order.listingTime,
-                            order.expirationTime,
-                            order.salt,
-                        ], order.feeMethod, order.side, order.saleKind, order.howToCall, order.calldata, order.replacementPattern, order.staticExtradata, { from: accountAddress })];
+                    case 5:
+                        wyvernProtocolReadOnly = this._getWyvernProtocolForOrder(order);
+                        return [4 /*yield*/, wyvernProtocolReadOnly.wyvernExchange.validateOrderParameters_.callAsync([
+                                order.exchange,
+                                order.maker,
+                                order.taker,
+                                order.feeRecipient,
+                                order.target,
+                                order.staticTarget,
+                                order.paymentToken,
+                            ], [
+                                order.makerRelayerFee,
+                                order.takerRelayerFee,
+                                order.makerProtocolFee,
+                                order.takerProtocolFee,
+                                order.basePrice,
+                                order.extra,
+                                order.listingTime,
+                                order.expirationTime,
+                                order.salt,
+                            ], order.feeMethod, order.side, order.saleKind, order.howToCall, order.calldata, order.replacementPattern, order.staticExtradata, { from: accountAddress })];
                     case 6:
                         buyValid = _c.sent();
                         if (!buyValid) {
@@ -3246,12 +3336,14 @@ var OpenSeaPort = /** @class */ (function () {
     OpenSeaPort.prototype._atomicMatch = function (_b) {
         var buy = _b.buy, sell = _b.sell, accountAddress = _b.accountAddress, _c = _b.metadata, metadata = _c === void 0 ? constants_1.NULL_BLOCK_HASH : _c;
         return __awaiter(this, void 0, void 0, function () {
-            var value, shouldValidateBuy, shouldValidateSell, txHash, txnData, args, gasEstimate, error_13, error_14;
+            var value, shouldValidateBuy, shouldValidateSell, wyvernProtocol, wyvernProtocolReadOnly, txHash, txnData, args, gasEstimate, error_13, error_14;
             return __generator(this, function (_d) {
                 switch (_d.label) {
                     case 0:
                         shouldValidateBuy = true;
                         shouldValidateSell = true;
+                        wyvernProtocol = this._getWyvernProtocolForOrder(buy);
+                        wyvernProtocolReadOnly = this._getWyvernProtocolForOrder(buy, true);
                         if (!(sell.maker.toLowerCase() == accountAddress.toLowerCase())) return [3 /*break*/, 2];
                         // USER IS THE SELLER, only validate the buy order
                         return [4 /*yield*/, this._sellOrderValidationAndApprovals({
@@ -3364,7 +3456,7 @@ var OpenSeaPort = /** @class */ (function () {
                         _d.label = 8;
                     case 8:
                         _d.trys.push([8, 10, , 11]);
-                        return [4 /*yield*/, this._wyvernProtocolReadOnly.wyvernExchange.atomicMatch_.estimateGasAsync(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], txnData)];
+                        return [4 /*yield*/, wyvernProtocolReadOnly.wyvernExchange.atomicMatch_.estimateGasAsync(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], txnData)];
                     case 9:
                         gasEstimate = _d.sent();
                         txnData.gas = this._correctGasAmount(gasEstimate);
@@ -3378,7 +3470,7 @@ var OpenSeaPort = /** @class */ (function () {
                     case 11:
                         _d.trys.push([11, 13, , 14]);
                         this.logger("Fulfilling order with gas set to ".concat(txnData.gas));
-                        return [4 /*yield*/, this._wyvernProtocol.wyvernExchange.atomicMatch_.sendTransactionAsync(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], txnData)];
+                        return [4 /*yield*/, wyvernProtocol.wyvernExchange.atomicMatch_.sendTransactionAsync(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], txnData)];
                     case 12:
                         txHash =
                             _d.sent();
@@ -3420,44 +3512,91 @@ var OpenSeaPort = /** @class */ (function () {
             });
         });
     };
-    OpenSeaPort.prototype._authorizeOrder = function (order) {
+    /**
+     * Gets the current order nonce for an account
+     * @param accountAddress account to check the nonce for
+     * @returns nonce
+     */
+    OpenSeaPort.prototype.getNonce = function (accountAddress) {
+        return this._wyvernProtocol.wyvernExchange.nonces.callAsync(accountAddress);
+    };
+    /**
+     * Generate the signature for authorizing an order
+     * @param order Unsigned wyvern order
+     * @returns order signature in the form of v, r, s, also an optional nonce
+     */
+    OpenSeaPort.prototype.authorizeOrder = function (order) {
         return __awaiter(this, void 0, void 0, function () {
-            var message, signerAddress, makerIsSmartContract, error_15;
+            var signerAddress, message_1, signerOrderNonce, orderForSigning, message, ecSignature, error_15;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
-                        message = order.hash;
                         signerAddress = order.maker;
                         this._dispatch(types_1.EventType.CreateOrder, {
                             order: order,
                             accountAddress: order.maker,
                         });
-                        return [4 /*yield*/, (0, utils_1.isContractAddress)(this.web3, signerAddress)];
+                        _b.label = 1;
                     case 1:
-                        makerIsSmartContract = _b.sent();
-                        _b.label = 2;
-                    case 2:
-                        _b.trys.push([2, 7, , 8]);
-                        if (!makerIsSmartContract) return [3 /*break*/, 4];
-                        // The web3 provider is probably a smart contract wallet.
-                        // Fallback to on-chain approval.
-                        return [4 /*yield*/, this._approveOrder(order)];
-                    case 3:
-                        // The web3 provider is probably a smart contract wallet.
-                        // Fallback to on-chain approval.
-                        _b.sent();
-                        return [2 /*return*/, null];
-                    case 4: return [4 /*yield*/, (0, utils_1.personalSignAsync)(this.web3, message, signerAddress)];
-                    case 5: return [2 /*return*/, _b.sent()];
-                    case 6: return [3 /*break*/, 8];
-                    case 7:
+                        _b.trys.push([1, 6, , 7]);
+                        if (!(order.exchange ===
+                            utils_1.wyvern2_2ConfigByNetwork[this._networkName]
+                                .wyvernExchangeContractAddress &&
+                            order.hash)) return [3 /*break*/, 3];
+                        message_1 = order.hash;
+                        return [4 /*yield*/, (0, utils_1.personalSignAsync)(this.web3, message_1, signerAddress)];
+                    case 2: return [2 /*return*/, _b.sent()];
+                    case 3: return [4 /*yield*/, this.getNonce(signerAddress)];
+                    case 4:
+                        signerOrderNonce = _b.sent();
+                        orderForSigning = {
+                            maker: order.maker,
+                            exchange: order.exchange,
+                            taker: order.taker,
+                            makerRelayerFee: order.makerRelayerFee.toString(),
+                            takerRelayerFee: order.takerRelayerFee.toString(),
+                            makerProtocolFee: order.makerProtocolFee.toString(),
+                            takerProtocolFee: order.takerProtocolFee.toString(),
+                            feeRecipient: order.feeRecipient,
+                            feeMethod: order.feeMethod,
+                            side: order.side,
+                            saleKind: order.saleKind,
+                            target: order.target,
+                            howToCall: order.howToCall,
+                            calldata: order.calldata,
+                            replacementPattern: order.replacementPattern,
+                            staticTarget: order.staticTarget,
+                            staticExtradata: order.staticExtradata,
+                            paymentToken: order.paymentToken,
+                            basePrice: order.basePrice.toString(),
+                            extra: order.extra.toString(),
+                            listingTime: order.listingTime.toString(),
+                            expirationTime: order.expirationTime.toString(),
+                            salt: order.salt.toString(),
+                        };
+                        message = {
+                            types: constants_1.EIP_712_ORDER_TYPES,
+                            domain: {
+                                name: constants_1.EIP_712_WYVERN_DOMAIN_NAME,
+                                version: constants_1.EIP_712_WYVERN_DOMAIN_VERSION,
+                                chainId: this._networkName == types_1.Network.Main ? 1 : 4,
+                                verifyingContract: order.exchange,
+                            },
+                            primaryType: "Order",
+                            message: __assign(__assign({}, orderForSigning), { nonce: signerOrderNonce.toNumber() }),
+                        };
+                        return [4 /*yield*/, (0, utils_1.signTypedDataAsync)(this.web3, message, signerAddress)];
+                    case 5:
+                        ecSignature = _b.sent();
+                        return [2 /*return*/, __assign(__assign({}, ecSignature), { nonce: signerOrderNonce.toNumber() })];
+                    case 6:
                         error_15 = _b.sent();
                         this._dispatch(types_1.EventType.OrderDenied, {
                             order: order,
                             accountAddress: signerAddress,
                         });
                         throw error_15;
-                    case 8: return [2 /*return*/];
+                    case 7: return [2 /*return*/];
                 }
             });
         });
@@ -3476,21 +3615,23 @@ var OpenSeaPort = /** @class */ (function () {
     /**
      * Get the clients to use for a read call
      * @param retries current retry value
+     * @param wyvernProtocol optional wyvern protocol to use, has default
+     * @param wyvernProtocol optional readonly wyvern protocol to use, has default
      */
-    OpenSeaPort.prototype._getClientsForRead = function (retries) {
-        if (retries === void 0) { retries = 1; }
+    OpenSeaPort.prototype._getClientsForRead = function (_b) {
+        var retries = _b.retries, _c = _b.wyvernProtocol, wyvernProtocol = _c === void 0 ? this._wyvernProtocol : _c, _d = _b.wyvernProtocolReadOnly, wyvernProtocolReadOnly = _d === void 0 ? this._wyvernProtocolReadOnly : _d;
         if (retries > 0) {
             // Use injected provider by default
             return {
                 web3: this.web3,
-                wyvernProtocol: this._wyvernProtocol,
+                wyvernProtocol: wyvernProtocol,
             };
         }
         else {
             // Use provided provider as fallback
             return {
                 web3: this.web3ReadOnly,
-                wyvernProtocol: this._wyvernProtocolReadOnly,
+                wyvernProtocol: wyvernProtocolReadOnly,
             };
         }
     };
@@ -3568,6 +3709,24 @@ var OpenSeaPort = /** @class */ (function () {
                     })];
             });
         });
+    };
+    OpenSeaPort.prototype._getWyvernProtocolForOrder = function (order, useReadOnly) {
+        if (order.exchange ===
+            utils_1.wyvern2_2ConfigByNetwork[this._networkName].wyvernExchangeContractAddress) {
+            return useReadOnly
+                ? this._wyvern2_2ProtocolReadOnly
+                : this._wyvern2_2Protocol;
+        }
+        return useReadOnly ? this._wyvernProtocolReadOnly : this._wyvernProtocol;
+    };
+    OpenSeaPort.prototype._getWyvernTokenTransferProxyAddressForOrder = function (order) {
+        var _b;
+        return ((order.exchange ===
+            utils_1.wyvern2_2ConfigByNetwork[this._networkName].wyvernExchangeContractAddress
+            ? utils_1.wyvern2_2ConfigByNetwork[this._networkName]
+                .wyvernTokenTransferProxyContractAddress
+            : (_b = this._wyvernConfigOverride) === null || _b === void 0 ? void 0 : _b.wyvernTokenTransferProxyContractAddress) ||
+            wyvern_js_1.WyvernProtocol.getTokenTransferProxyAddress(this._networkName));
     };
     /**
      * Returns whether or not an authenticated proxy is revoked for a specific account address

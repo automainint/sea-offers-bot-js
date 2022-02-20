@@ -1,6 +1,6 @@
 {
   "name": "sea-offers-bot-js",
-  "version": "0.2.13",
+  "version": "0.2.14",
   "description": "Multiple buy orders bot for OpenSea.",
   "main": "offers.js",
   "scripts": {
@@ -18,6 +18,6 @@
     "https-proxy-agent": "^5.0.0",
     "socks-proxy-agent": "^6.0.0",
     "@truffle/hdwallet-provider": "^1.4.1",
-    "opensea-js": "1.2.8"
+    "opensea-js": "2.0.1"
   }
 }
