@@ -27,9 +27,9 @@ Have a separate account with small balance for testing unknown bots and services
 - `infura_key` or `alchemy_key` - Infura or Alchemy node API key.
 - `mnemonic` or `private_keys` - MetaMask mnemonic phrase or array with private keys.
 - `wallet_address` - buyer wallet address.
+- `opensea_key` - OpenSea API key.
 
 ### Optional settings
-- `opensea_key` - OpenSea API key. Optional, recommended for multiple requests.
 - `expiration` - expiration time for offer in hours. Default: `24`.
 - `discard_threshold` - how much consecutive fails to discard an asset. Default: `10`.
 - `price_auto` - enable auto price calculation. Default: `true`.
