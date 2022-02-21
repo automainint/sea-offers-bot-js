@@ -1,7 +1,7 @@
 # sea-offers-bot-js
 Multiple buy orders **bot** for **OpenSea** with automatic price calculation and proxy support.
 
-If something don't work, feel free to [create an issue][issues-link].
+If something don't work, feel free to [open an issue][issues-link].
 
 The code is **obfuscated**. [Contact me][contact-link] if you need access to unobfuscated source code, guidance, or you have a new feature proposal.
 
@@ -169,7 +169,7 @@ node offers.js --config=config.json --file=list.txt
 **Demo video** - https://youtu.be/sGwS2v-S2wk
 
 ## Troubleshooting
-If the bot don't work with recent Node.js version, try to use **v8**.
+If the bot don't work with recent Node.js version, try to use **v16**.
 You can use **NVM** to easily switch versions.
 
 If you getting error `0308010C:digital envelope routines::unsupported`,
