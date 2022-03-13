@@ -1,6 +1,6 @@
 {
   "name": "sea-offers-bot-js",
-  "version": "0.2.15",
+  "version": "0.2.16",
   "description": "Multiple buy orders bot for OpenSea.",
   "main": "offers.js",
   "scripts": {

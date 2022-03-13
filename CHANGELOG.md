@@ -1,3 +1,7 @@
+## 13.03.2022
+*Version 0.2.16*
+- Fix acquire buy orders.
+
 ## 20.02.2022
 *Version 0.2.15*
 - Add timeout for `getAsset` call.

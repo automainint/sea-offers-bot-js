@@ -41,7 +41,7 @@ function clear() {
   response_pool = {};
 }
 
-async function save_response(url, response) {
+function save_response(url, response) {
   if (options.response_filter(response)) {
     response_pool[url] = {
       time:     Date.now(),
@@ -107,7 +107,7 @@ async function cache(custom_fetch, url, request_options) {
     return load_response(url);
   }
 
-  return await save_response(url, await custom_fetch(url, request_options));
+  return save_response(url, await custom_fetch(url, request_options));
 }
 
 fetch = function(url, request_options) {
