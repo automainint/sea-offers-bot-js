@@ -1,3 +1,8 @@
+## 06.04.2022
+*Version 0.2.17*
+- Limit acquiring orders.
+- Upgrade to OpenSea 3.0.2.
+
 ## 13.03.2022
 *Version 0.2.16*
 - Fix acquire buy orders.
@@ -22,7 +27,6 @@
 *Version 0.2.12*
 - Use OpenSea SDK v1.2.8.
 - Add custom fetch cache.
-- Add `gas_price_addition` option.
 - Add `skip_if_too_low` option.
 - Add `--log_fetch_all` option and command line argument.
 - Add `--log_fetch` command line argument.
